@@ -3,6 +3,8 @@ package com.health.check.Controller;
 import com.health.check.Configuration.JwtProvider;
 import com.health.check.Dto.AuthResponse;
 import com.health.check.Dto.RegisterRequestDto;
+import com.health.check.Repository.DoctorRepository;
+import com.health.check.models.Doctor;
 import com.health.check.models.User;
 import com.health.check.Repository.UserRepository;
 
@@ -29,26 +31,45 @@ public class AuthController {
     private UserRepository userRepository;
 
     @Autowired
+    private DoctorRepository doctorRepository;
+
+    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> createUser(@RequestBody User user) throws Exception {
-        User isExist = userRepository.findByEmail(user.getEmail());
+    public ResponseEntity<AuthResponse> createUser(@RequestBody RegisterRequestDto registerRequest) throws Exception {
+        User isExist = userRepository.findByEmail(registerRequest.getEmail());
         if (isExist != null) {
             throw new Exception("Email already used with another account");
         }
 
         User newUser = new User();
-        newUser.setEmail(user.getEmail());
-        newUser.setFirstName(user.getFirstName());
-        newUser.setLastName(user.getLastName());
-        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
-        newUser.setRole(User.Role.PATIENT);
+        newUser.setEmail(registerRequest.getEmail());
+        newUser.setFirstName(registerRequest.getFirstName());
+        newUser.setLastName(registerRequest.getLastName());
+        newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        String role = registerRequest.getRole().trim().toLowerCase();
+        switch (role) {
+            case "patient":
+                newUser.setRole(User.Role.PATIENT);
+                break;
+            case "doctor":
+                newUser.setRole(User.Role.DOCTOR);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid role: " + registerRequest.getRole());
+        }
+
         User savedUser = userRepository.save(newUser);
+        if(savedUser.getRole() == User.Role.DOCTOR) {
+            Doctor doctor = new Doctor();
+            doctor.user = savedUser;
+            doctorRepository.save(doctor);
+        }
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(savedUser, savedUser);
         String token = JwtProvider.generateToken(authentication);
-        return ResponseEntity.ok(new AuthResponse(token,"register success",user.getRole().toString()));
+        return ResponseEntity.ok(new AuthResponse(token,"register success",newUser.getRole().toString()));
     }
 
     @PostMapping("/signin")

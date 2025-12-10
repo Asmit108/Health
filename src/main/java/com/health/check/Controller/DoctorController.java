@@ -14,13 +14,7 @@ public class DoctorController {
     @Autowired
     private DoctorService doctorService;
 
-    @PostMapping("/admin/doctor/create")
-    private ResponseEntity<String> createDoctor(@RequestBody Doctor doctor) {
-        doctorService.createDoctor(doctor);
-        return ResponseEntity.ok("Doctor created successfully");
-    }
-
-    @GetMapping("/list")
+    @GetMapping("/doctors")
     public ResponseEntity<List<Doctor>> getDoctors(
             @RequestParam(required = false) String specialization,
             @RequestParam(required = false) Integer experienceYears,
@@ -31,14 +25,14 @@ public class DoctorController {
     }
 
     // ✅ Update Doctor
-    @PutMapping("/update/{id}")
+    @PutMapping("/doctors/{id}")
     public ResponseEntity<String> updateDoctor(@PathVariable Long id, @RequestBody Doctor doctor) {
         doctorService.updateDoctor(id, doctor);
         return ResponseEntity.ok("Doctor updated successfully");
     }
 
     // ✅ Delete Doctor
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/doctors/{id}")
     public ResponseEntity<String> deleteDoctor(@PathVariable Long id) {
         doctorService.deleteDoctor(id);
         return ResponseEntity.ok("Doctor deleted successfully");

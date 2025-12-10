@@ -13,5 +13,5 @@ public class Doctor {
     private Double consultationFee;
     private String clinicAddress;
     @OneToOne(cascade = CascadeType.ALL)
-    private User user;
+    public User user;
 }
