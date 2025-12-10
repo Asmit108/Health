@@ -20,4 +20,3 @@ public class DoctorController {
         return ResponseEntity.ok("Doctor created successfully");
     }
 
-    @GetMapping()

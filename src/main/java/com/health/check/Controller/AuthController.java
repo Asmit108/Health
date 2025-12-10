@@ -7,6 +7,7 @@ import com.health.check.models.User;
 import com.health.check.Repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -31,7 +32,7 @@ public class AuthController {
     private BCryptPasswordEncoder passwordEncoder;
 
     @PostMapping("/signup")
-    public AuthResponse createUser(@RequestBody User user) throws Exception {
+    public ResponseEntity<AuthResponse> createUser(@RequestBody User user) throws Exception {
         User isExist = userRepository.findByEmail(user.getEmail());
         if (isExist != null) {
             throw new Exception("Email already used with another account");
@@ -47,12 +48,11 @@ public class AuthController {
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(savedUser, savedUser);
         String token = JwtProvider.generateToken(authentication);
-        AuthResponse res = new AuthResponse(token, "register success", savedUser.getRole().toString());
-        return res;
+        return ResponseEntity.ok(new AuthResponse(token,"register success",user.getRole().toString()));
     }
 
     @PostMapping("/signin")
-    public AuthResponse signin(@RequestBody User loginRequest) throws Exception {
+    public ResponseEntity<AuthResponse> signin(@RequestBody User loginRequest) throws Exception {
         Authentication authentication = authenticate(loginRequest);
         String token = JwtProvider.generateToken(authentication);
         User user = userRepository.findByEmail(loginRequest.getEmail());
@@ -60,8 +60,7 @@ public class AuthController {
             throw new Exception("User not found");
         }
 
-        AuthResponse res = new AuthResponse(token, "login success", user.getRole().toString());
-        return res;
+        return ResponseEntity.ok(new AuthResponse(token,"login success",user.getRole().toString()));
     }
 
     private Authentication authenticate(User loginRequest) throws Exception {
