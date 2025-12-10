@@ -21,27 +21,20 @@ public class AuthController {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    @PostMapping("/register")
-    public String register(@RequestBody RegisterRequestDto req) {
-
-        // check if user exists
-        if (userRepository.findByEmail(req.getEmail()) != null) {
-            return "User already exists";
+    @PostMapping("/signup")
+    public AuthResponse createUser(@RequestBody User user) throws Exception {
+        User isExist=userRepository.findByEmail(user.getEmail());
+        if(isExist!=null){
+            throw new Exception("Email already used with another account");
         }
 
-        // create user object
-        User user = new User();
-        user.setName(req.getName());
-        user.setEmail(req.getEmail());
-        user.setPassword(passwordEncoder.encode(req.getPassword()));
+        User newUser=new User();
+        newUser.setEmail(user.getEmail());
+        newUser.setFirstName(user.getFirstName());
+        newUser.setLastName(user.getLastName());
+        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        newUser.setRole("USER");
+        User savedUser=userRepository.save(newUser);
 
-        userRepository.save(user);
-
-        // create fake Authentication for JWT generator
-        Authentication auth = new UsernamePasswordAuthenticationToken(req.getEmail(), null);
-
-        String jwt = JwtProvider.generateToken(auth);
-
-        return jwt;     // return token to frontend
-    }
-}
+        Authentication authentication = new UsernamePasswordAuthenticationToken(savedUser, savedUser);
+        String token= JwtProvider.
