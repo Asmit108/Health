@@ -1,10 +1,9 @@
-package com.example.demo.controller;
+package com.health.check.Controller;
 
-import com.example.demo.dto.CreateAppointmentRequest;
-import com.example.demo.dto.UpdateAppointmentStatusRequest;
-import com.example.demo.dto.AppointmentResponse;
-import com.example.demo.service.AppointmentService;
+import com.health.check.Service.AppointmentService;
+import com.health.check.models.Appointment;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,28 +14,46 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AppointmentController {
 
-    private final AppointmentService appointmentService;
+    @Autowired
+    private AppointmentService appointmentService;
 
     // Create appointment
     @PostMapping
-    public ResponseEntity<AppointmentResponse> createAppointment(@RequestBody CreateAppointmentRequest request) {
-        return ResponseEntity.ok(appointmentService.createAppointment(request));
+    public ResponseEntity<String> createAppointment(@RequestBody Appointment req) {
+        appointmentService.createAppointment(req);
+        return ResponseEntity.ok("Appointment created successfully");
     }
 
     // Update status
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<AppointmentResponse> updateStatus(
-            @PathVariable Long id,
-            @RequestBody UpdateAppointmentStatusRequest request) {
+    @PutMapping("/{id}/status")
+    public ResponseEntity<String> updateStatus(@PathVariable Long id, @RequestBody String status) {
+        appointmentService.updateStatus(id,status);
+        return ResponseEntity.ok("Appointment status updated successfully");
+    }
 
-        return ResponseEntity.ok(appointmentService.updateAppointmentStatus(id, request));
+    @PutMapping("/{id}/reschedule")
+    public ResponseEntity<String> reschedule(@PathVariable Long id, @RequestBody String date) {
+        appointmentService.reschedule(id,date);
+        return ResponseEntity.ok("Appointment date updated successfully");
     }
 
     // Get all appointments for a doctor
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<AppointmentResponse>> getAppointmentsByDoctorId(
-            @PathVariable Long doctorId) {
-
+    public ResponseEntity<List<Appointment>> getAppointmentsByDoctorId(@PathVariable Long doctorId) {
         return ResponseEntity.ok(appointmentService.getAppointmentsByDoctorId(doctorId));
     }
+
+    @GetMapping("/patient/{patientId}")
+    public ResponseEntity<List<Appointment>> getAppointmentsByPatientId(@PathVariable Long patientId) {
+        return ResponseEntity.ok(appointmentService.getAppointmentsByPatientId(patientId));
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteAppointment(@PathVariable Long id) {
+        appointmentService.deleteAppointment(id);
+        return ResponseEntity.ok("appointment deleted successfully");
+    }
+    //patch to update some field and put for all field
+    // but we can use put for everything,,no issue
+
 }

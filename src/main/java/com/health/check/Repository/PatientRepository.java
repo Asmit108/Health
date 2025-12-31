@@ -1,4 +1,9 @@
 package com.health.check.Repository;
 
-public interface PatientRepository {
+import com.health.check.models.Patient;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PatientRepository extends JpaRepository<Patient,Long> {
+
+    Patient getPatientById(Long id);
 }

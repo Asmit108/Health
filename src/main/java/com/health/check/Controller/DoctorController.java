@@ -24,6 +24,12 @@ public class DoctorController {
         return ResponseEntity.ok(doctors);
     }
 
+    @GetMapping("/doctors/{id}")
+    public ResponseEntity<Doctor> getDoctorById(@PathVariable Long id) {
+        Doctor doctor = doctorService.getDoctorById(id);
+        return ResponseEntity.ok(doctor);
+    }
+
     // ✅ Update Doctor
     @PutMapping("/doctors/{id}")
     public ResponseEntity<String> updateDoctor(@PathVariable Long id, @RequestBody Doctor doctor) {
@@ -37,7 +43,7 @@ public class DoctorController {
         doctorService.deleteDoctor(id);
         return ResponseEntity.ok("Doctor deleted successfully");
     }
-    }
+}
 
 
 

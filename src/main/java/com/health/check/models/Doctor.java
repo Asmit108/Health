@@ -1,8 +1,10 @@
 package com.health.check.models;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
+@Data
 public class Doctor {
 
     @Id
