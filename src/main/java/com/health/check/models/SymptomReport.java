@@ -1,13 +1,16 @@
-package com.health.check.Dto;
+package com.health.check.models;
 
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
+@Entity
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class SymptomResponseDto {
+public class SymptomReport {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private Long patientId;
     private String possibleCauses;
     private String severity;
     private String remedies;

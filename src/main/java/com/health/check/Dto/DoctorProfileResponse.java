@@ -1,5 +1,7 @@
 package com.health.check.Dto;
 
+import com.health.check.models.Doctor;
+import com.health.check.models.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthResponse {
-    String token;
-    String message;
-    String role;
+public class DoctorProfileResponse {
+    private User user;
+    private Doctor doctor;
 }

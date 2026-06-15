@@ -7,11 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DoctorDto {
-    private String specialization;
-    private int experienceYears;
-    private Double consultationFee;
-    private String clinicAddress;
+public class PatientDto {
     private String firstName;
     private String lastName;
     private Integer age;

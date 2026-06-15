@@ -1,8 +1,8 @@
 package com.health.check.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.health.check.Dto.SymptomResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.health.check.exceptions.ResponseParseException;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ public class GenAIService {
     private ChatClient chatClient;
 
     public SymptomResponseDto checkSymptoms(String symptoms){
-
+        // generate prompt
         String prompt = """
         A user reports the following symptoms:
 
@@ -35,6 +35,7 @@ public class GenAIService {
         Do NOT add extra text outside JSON.
         """.formatted(symptoms);
 
+        // get Ai Response
         String aiResponse = chatClient
                 .prompt()
                 .user(prompt)
@@ -45,7 +46,7 @@ public class GenAIService {
         try {
             return mapper.readValue(aiResponse, SymptomResponseDto.class);
         } catch (Exception e) {
-            throw new RuntimeException("Invalid AI response: " + aiResponse, e);
+            throw new ResponseParseException("Invalid AI response: " + aiResponse);
         }
     }
 }

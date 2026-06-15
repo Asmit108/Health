@@ -14,6 +14,5 @@ public class Doctor {
     private int experienceYears;
     private Double consultationFee;
     private String clinicAddress;
-    @OneToOne(cascade = CascadeType.ALL)
-    public User user;
+    public Long user_id;
 }

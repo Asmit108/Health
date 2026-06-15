@@ -9,26 +9,66 @@ import org.springframework.security.core.Authentication;
 
 import java.util.Date;
 
+/**
+ * Utility class for JWT (JSON Web Token) generation and validation.
+ *
+ * Handles creating new JWT tokens for authenticated users and extracting
+ * user information from existing tokens.
+ *
+ * @author Health Check Team
+ * @version 1.0
+ */
 public class JwtProvider {
-    private static SecretKey key = Keys.hmacShaKeyFor(JwtConstant.SECRET_KEY.getBytes());
+    /** Secret key used for HMAC-SHA signing of JWT tokens */
+    private static final SecretKey key = Keys.hmacShaKeyFor(JwtConstant.SECRET_KEY.getBytes());
 
+    /**
+     * Generates a new JWT token for an authenticated user.
+     *
+     * Creates a signed JWT token containing the user's email address
+     * and other claims. Token expires after 24 hours.
+     *
+     * @param auth the Authentication object containing user details and authorities
+     * @return a signed JWT token string (without Bearer prefix)
+     */
     public static String generateToken(Authentication auth) {
-        String jwt=Jwts.builder()
+        // Build and sign JWT token with user information
+        return Jwts.builder()
+                // Set token issuer
                 .setIssuer("social")
+                // Set time token was issued
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(new Date().getTime()+86400000))
-                .claim("email",auth.getName())
+                // Set token expiration to 24 hours from now (86400000 milliseconds)
+                .setExpiration(new Date(new Date().getTime() + 86400000))
+                // Store user email as a claim for later retrieval
+                .claim("email", auth.getName())
+                // Sign with secret key
                 .signWith(key)
+                // Compact the JWT to a URL-safe string
                 .compact();
-
-        return jwt;
     }
 
+    /**
+     * Extracts the email address from a JWT token.
+     *
+     * Parses and validates the JWT token, extracting the email claim.
+     * Expects token in "Bearer <token>" format.
+     *
+     * @param jwt the JWT token string with "Bearer " prefix
+     * @return the email address stored in the token
+     */
     public static String getEmailFromJwtToken(String jwt) {
-        //Bearer token
-        jwt=jwt.substring(7);
-        Claims claims=Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt).getBody();
-        String email=String.valueOf(claims.get("email"));
-        return email;
+        // Remove "Bearer " prefix (7 characters)
+        jwt = jwt.substring(7);
+
+        // Parse JWT and extract claims
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(jwt)
+                .getBody();
+
+        // Retrieve and return email from claims
+        return String.valueOf(claims.get("email"));
     }
 }
