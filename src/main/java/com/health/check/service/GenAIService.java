@@ -1,0 +1,54 @@
+package com.health.check.service;
+
+import com.health.check.dto.SymptomResponseDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.health.check.exceptions.ResponseParseException;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.stereotype.Service;
+
+@Service
+public class GenAIService {
+
+    private final ChatClient chatClient;
+
+    public GenAIService(ChatClient chatClient) {
+        this.chatClient = chatClient;
+    }
+
+    public SymptomResponseDto checkSymptoms(String symptoms){
+        // generate prompt
+        String prompt = """
+        A user reports the following symptoms:
+
+        %s
+
+        Respond ONLY in valid JSON with the following fields:
+
+        {
+          "possibleCauses": "",
+          "severity": "",
+          "remedies": "",
+          "whenToSeekCare": ""
+          "recommendedTests": "",
+          "lifeStyleTips": ""
+          "typeOfDoctorToSeek": ""
+        }
+
+        Do NOT add extra text outside JSON.
+        """.formatted(symptoms);
+
+        // get Ai Response
+        String aiResponse = chatClient
+                .prompt()
+                .user(prompt)
+                .call()
+                .content();
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.readValue(aiResponse, SymptomResponseDto.class);
+        } catch (Exception e) {
+            throw new ResponseParseException("Invalid AI response: " + aiResponse);
+        }
+    }
+}

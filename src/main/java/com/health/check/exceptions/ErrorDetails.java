@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 
 /**
  * DTO for standardized error response details.
- *
  * This class is used to structure exception information that is returned to clients
  * in error responses, providing a consistent and informative error format.
  *

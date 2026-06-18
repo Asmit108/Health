@@ -16,11 +16,13 @@ public class User {
     private String sex;
     private String email;
     private String password;
+
     // 👇 ENUM role (patient or doctor)
     public enum Role {
         PATIENT,
         DOCTOR
     }
+
     @Enumerated(EnumType.STRING)
     private Role role;
 }

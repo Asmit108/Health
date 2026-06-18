@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 
 /**
  * Global exception handler for centralized error handling across the application.
- *
  * This controller advice intercepts exceptions thrown throughout the application
  * and returns standardized error responses with appropriate HTTP status codes.
  *

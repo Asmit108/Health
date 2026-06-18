@@ -2,7 +2,6 @@ package com.health.check.exceptions;
 
 /**
  * Custom exception thrown when an attempt is made to create a duplicate entity.
- *
  * This exception is used to indicate that an operation failed because a resource
  * with duplicate data already exists (e.g., duplicate email, duplicate appointment time).
  *

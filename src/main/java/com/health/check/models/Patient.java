@@ -10,5 +10,5 @@ public class Patient{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long user_id;
+    private Long userId;
 }

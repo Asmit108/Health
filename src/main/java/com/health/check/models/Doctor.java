@@ -14,5 +14,5 @@ public class Doctor {
     private int experienceYears;
     private Double consultationFee;
     private String clinicAddress;
-    public Long user_id;
+    private Long userId;
 }
