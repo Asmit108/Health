@@ -2,6 +2,8 @@ package com.health.check.repository;
 
 import com.health.check.models.Appointment;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -15,5 +17,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 
     List<Appointment> getAppointmentsByPatientId(Long patientId);
 
-    List<Appointment> getAppointmentsByAppointmentDateTime(LocalDateTime dateTime);
+    @Query("SELECT a FROM Appointment a WHERE a.appointmentDateTime = :dateTime AND a.doctorId = :doctorId")
+    List<Appointment> getAppointmentsByAppointmentDateTimeAndDoctorId(@Param("dateTime") LocalDateTime dateTime,
+                                                                      @Param("doctorId") Long doctorId);
 }

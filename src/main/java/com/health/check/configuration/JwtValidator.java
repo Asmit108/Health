@@ -1,6 +1,10 @@
 package com.health.check.configuration;
 
+import com.health.check.models.User;
+import com.health.check.repository.UserRepository;
+import com.health.check.service.UserService;
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.Access;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,8 +39,10 @@ import java.util.Objects;
 public class JwtValidator extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
-    public JwtValidator(JwtProvider jwtProvider) {
+    private final UserService userService;
+    public JwtValidator(JwtProvider jwtProvider,  UserService userService) {
         this.jwtProvider = jwtProvider;
+        this.userService = userService;
     }
     /**
      * Executes JWT validation logic for each incoming request.
@@ -81,7 +87,10 @@ public class JwtValidator extends OncePerRequestFilter {
         try {
             // Extract email from JWT token
             String email = jwtProvider.getEmailFromJwtToken(jwt);
-
+            User user = userService.getUserByEmail(email);
+            if(!Objects.equals(user.getRole().toString(), role)) {
+                throw new Exception("Role passed in header is wrong");
+            }
             // Create authorities list with user role
             Collection<? extends GrantedAuthority> authorities =
                     List.of(new SimpleGrantedAuthority("ROLE_" + role));
@@ -94,7 +103,12 @@ public class JwtValidator extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
         } catch (Exception e) {
-            throw new BadCredentialsException("Invalid JWT token");
+            if ("Role passed in header is wrong".equals(e.getMessage())) {
+                throw new RuntimeException("Role passed in header is wrong");
+            }
+            else{
+                throw new BadCredentialsException("Invalid JWT token");
+            }
         }
 
         // Continue the request to the next filter in the chain

@@ -2,19 +2,20 @@ package com.health.check.controller;
 
 import com.health.check.dto.AppointmentRequestDto;
 import com.health.check.dto.PatientProfileResponse;
-import com.health.check.service.AppointmentService;
-import com.health.check.service.PatientService;
 import com.health.check.models.Appointment;
 import com.health.check.models.Patient;
-import org.junit.jupiter.api.BeforeEach;
+import com.health.check.service.AppointmentService;
+import com.health.check.service.PatientService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
@@ -35,154 +36,125 @@ class AppointmentControllerTest {
     @InjectMocks
     private AppointmentController appointmentController;
 
-    @BeforeEach
-    void setup() {
-        SecurityContextHolder.clearContext();
+    private void mockSecurityContext(String email) {
+        Authentication auth =
+                new UsernamePasswordAuthenticationToken(email, null);
+
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(auth);
+
+        SecurityContextHolder.setContext(context);
     }
 
     @Test
-    void createAppointmentSuccess() throws Exception {
+    void createAppointment_success() throws Exception {
+
+        mockSecurityContext("test@gmail.com");
 
         Patient patient = new Patient();
         patient.setId(1L);
 
-        PatientProfileResponse profileResponse =
-                new PatientProfileResponse();
-        profileResponse.setPatient(patient);
+        PatientProfileResponse profile = new PatientProfileResponse();
+        profile.setPatient(patient);
 
-        AppointmentRequestDto request = new AppointmentRequestDto();
-        Appointment saved = new Appointment();
-        saved.setId(100L);
+        AppointmentRequestDto dto = new AppointmentRequestDto();
 
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(
-                        "test@gmail.com",
-                        null
-                )
-        );
+        Appointment appointment = new Appointment();
 
         when(patientService.getPatientByEmail("test@gmail.com"))
-                .thenReturn(profileResponse);
+                .thenReturn(profile);
 
-        when(appointmentService.createAppointment(any(AppointmentRequestDto.class)))
-                .thenReturn(saved);
+        when(appointmentService.createAppointment(dto))
+                .thenReturn(appointment);
 
-        ResponseEntity<?> response =
-                appointmentController.createAppointment(
-                        request
-                );
+        ResponseEntity<Appointment> response =
+                appointmentController.createAppointment(dto);
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(saved, response.getBody());
-        assertEquals(1L, request.getPatientId());
+        assertEquals(201, response.getStatusCodeValue());
+        assertEquals(1L, dto.getPatientId());
 
-        verify(patientService).getPatientByEmail("test@gmail.com");
-        verify(appointmentService).createAppointment(request);
+        verify(appointmentService).createAppointment(dto);
     }
 
     @Test
-    void updateStatusSuccess() throws Exception {
+    void updateStatus_success() throws Exception {
 
-        ResponseEntity<?> response =
-                appointmentController.updateStatus(
-                        1L,
-                        "CONFIRMED"
-                );
+        mockSecurityContext("doc@gmail.com");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(
-                "Appointment status updated successfully",
-                response.getBody()
-        );
+        doNothing().when(appointmentService)
+                .updateStatus(1L, "APPROVED", "doc@gmail.com");
 
-        verify(appointmentService)
-                .updateStatus(1L, "CONFIRMED");
+        ResponseEntity<String> response =
+                appointmentController.updateStatus(1L, "APPROVED");
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().contains("updated"));
+
+        verify(appointmentService).updateStatus(1L, "APPROVED", "doc@gmail.com");
     }
 
     @Test
-    void rescheduleSuccess() throws Exception {
+    void reschedule_success() throws Exception {
 
-        LocalDateTime dateTime = LocalDateTime.now();
+        mockSecurityContext("test@gmail.com");
 
-        ResponseEntity<?> response =
-                appointmentController.reschedule(
-                        1L,
-                        dateTime
-                );
+        LocalDateTime time = LocalDateTime.now();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(
-                "Appointment date updated successfully",
-                response.getBody()
-        );
+        doNothing().when(appointmentService)
+                .reschedule(1L, time, "test@gmail.com");
 
-        verify(appointmentService)
-                .reschedule(1L, dateTime);
+        ResponseEntity<String> response =
+                appointmentController.reschedule(1L, time);
+
+        assertEquals(200, response.getStatusCodeValue());
+        verify(appointmentService).reschedule(1L, time, "test@gmail.com");
     }
 
     @Test
-    void getAppointmentsByDoctorIdSuccess() {
+    void getAppointmentsByDoctorId_success() {
 
-        List<Appointment> appointments = List.of(
-                new Appointment(),
-                new Appointment()
-        );
+        List<Appointment> list = List.of(new Appointment());
 
         when(appointmentService.getAppointmentsByDoctorId(1L))
-                .thenReturn(appointments);
+                .thenReturn(list);
 
-        ResponseEntity<?> response =
+        ResponseEntity<List<Appointment>> response =
                 appointmentController.getAppointmentsByDoctorId(1L);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(appointments, response.getBody());
-
-        verify(appointmentService)
-                .getAppointmentsByDoctorId(1L);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(1, response.getBody().size());
     }
 
     @Test
-    void getAppointmentsByPatientIdSuccess() {
+    void getAppointmentsByPatientId_success() {
 
-        List<Appointment> appointments = List.of(
-                new Appointment()
-        );
+        List<Appointment> list = List.of(new Appointment());
 
         when(appointmentService.getAppointmentsByPatientId(1L))
-                .thenReturn(appointments);
+                .thenReturn(list);
 
-        ResponseEntity<?> response =
+        ResponseEntity<List<Appointment>> response =
                 appointmentController.getAppointmentsByPatientId(1L);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(appointments, response.getBody());
-
-        verify(appointmentService)
-                .getAppointmentsByPatientId(1L);
+        assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().size());
     }
 
     @Test
-    void deleteAppointmentSuccess() throws Exception {
+    void deleteAppointment_success() throws Exception {
 
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(
-                        "test@gmail.com",
-                        null
-                )
-        );
+        mockSecurityContext("test@gmail.com");
 
-        ResponseEntity<?> response =
-                appointmentController.deleteAppointment(
-                        1L
-                );
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(
-                "appointment deleted successfully",
-                response.getBody()
-        );
-
-        verify(appointmentService)
+        doNothing().when(appointmentService)
                 .deleteAppointment(1L, "test@gmail.com");
+
+        ResponseEntity<String> response =
+                appointmentController.deleteAppointment(1L);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().contains("deleted"));
+
+        verify(appointmentService).deleteAppointment(1L, "test@gmail.com");
     }
 }

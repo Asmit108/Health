@@ -1,12 +1,14 @@
 package com.health.check.service;
 
-import com.health.check.dto.AppointmentRequestDto;
+import com.health.check.dto.DoctorProfileResponse;
 import com.health.check.dto.PatientProfileResponse;
 import com.health.check.exceptions.AlreadyExistsException;
 import com.health.check.exceptions.NotFoundException;
 import com.health.check.models.Appointment;
+import com.health.check.models.Doctor;
 import com.health.check.models.Patient;
 import com.health.check.repository.AppointmentRepository;
+import com.health.check.dto.AppointmentRequestDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,56 +31,76 @@ class AppointmentServiceTest {
     @Mock
     private PatientService patientService;
 
+    @Mock
+    private DoctorService doctorService;
+
     @InjectMocks
     private AppointmentService appointmentService;
+
+    // ---------------- CREATE ----------------
 
     @Test
     void createAppointment_success() throws Exception {
 
-        AppointmentRequestDto dto = new AppointmentRequestDto();
-        dto.setDoctorId(1L);
-        dto.setPatientId(2L);
-        dto.setAppointmentDateTime(LocalDateTime.now());
+        AppointmentRequestDto req = new AppointmentRequestDto();
+        req.setDoctorId(1L);
+        req.setPatientId(2L);
+        req.setAppointmentDateTime(LocalDateTime.now());
+
+        when(doctorService.getDoctorById(1L)).thenReturn(new Doctor());
 
         when(appointmentRepository
-                .getAppointmentsByAppointmentDateTime(dto.getAppointmentDateTime()))
+                .getAppointmentsByAppointmentDateTimeAndDoctorId(any(), eq(1L)))
                 .thenReturn(List.of());
 
-        Appointment saved = new Appointment();
-        when(appointmentRepository.save(any(Appointment.class)))
-                .thenReturn(saved);
+        when(appointmentRepository.save(any()))
+                .thenAnswer(i -> i.getArgument(0));
 
-        Appointment result = appointmentService.createAppointment(dto);
+        Appointment result = appointmentService.createAppointment(req);
 
         assertNotNull(result);
-        verify(appointmentRepository).save(any(Appointment.class));
+        assertEquals(1L, result.getDoctorId());
+        assertEquals(2L, result.getPatientId());
     }
 
     @Test
-    void createAppointment_alreadyBooked() {
+    void createAppointment_timeSlotBooked() throws Exception {
 
-        AppointmentRequestDto dto = new AppointmentRequestDto();
-        dto.setAppointmentDateTime(LocalDateTime.now());
+        AppointmentRequestDto req = new AppointmentRequestDto();
+        req.setDoctorId(1L);
+        req.setAppointmentDateTime(LocalDateTime.now());
+
+        when(doctorService.getDoctorById(1L)).thenReturn(new Doctor());
 
         when(appointmentRepository
-                .getAppointmentsByAppointmentDateTime(dto.getAppointmentDateTime()))
+                .getAppointmentsByAppointmentDateTimeAndDoctorId(any(), eq(1L)))
                 .thenReturn(List.of(new Appointment()));
 
-        assertThrows(
-                AlreadyExistsException.class,
-                () -> appointmentService.createAppointment(dto)
-        );
+        assertThrows(AlreadyExistsException.class,
+                () -> appointmentService.createAppointment(req));
     }
+
+    // ---------------- UPDATE STATUS ----------------
 
     @Test
     void updateStatus_success() throws Exception {
 
         Appointment appointment = new Appointment();
+        appointment.setDoctorId(10L);
+
+        Doctor doctor = new Doctor();
+        doctor.setId(10L);
+
+        DoctorProfileResponse response = new DoctorProfileResponse();
+        response.setDoctor(doctor);
 
         when(appointmentRepository.getAppointmentById(1L))
                 .thenReturn(appointment);
 
-        appointmentService.updateStatus(1L, "SCHEDULED");
+        when(doctorService.getDoctorByEmail("doc@gmail.com"))
+                .thenReturn(response);
+
+        appointmentService.updateStatus(1L, "SCHEDULED", "doc@gmail.com");
 
         verify(appointmentRepository).save(appointment);
     }
@@ -89,21 +111,53 @@ class AppointmentServiceTest {
         when(appointmentRepository.getAppointmentById(1L))
                 .thenReturn(null);
 
-        assertThrows(
-                NotFoundException.class,
-                () -> appointmentService.updateStatus(1L, "SCHEDULED")
-        );
+        assertThrows(NotFoundException.class,
+                () -> appointmentService.updateStatus(1L, "SCHEDULED", "email"));
     }
+
+    @Test
+    void updateStatus_accessDenied() throws NotFoundException {
+
+        Appointment appointment = new Appointment();
+        appointment.setDoctorId(99L);
+
+        Doctor doctor = new Doctor();
+        doctor.setId(10L);
+
+        DoctorProfileResponse response = new DoctorProfileResponse();
+        response.setDoctor(doctor);
+
+        when(appointmentRepository.getAppointmentById(1L))
+                .thenReturn(appointment);
+
+        when(doctorService.getDoctorByEmail("doc@gmail.com"))
+                .thenReturn(response);
+
+        assertThrows(AccessDeniedException.class,
+                () -> appointmentService.updateStatus(1L, "SCHEDULED", "doc@gmail.com"));
+    }
+
+    // ---------------- RESCHEDULE ----------------
 
     @Test
     void reschedule_success() throws Exception {
 
         Appointment appointment = new Appointment();
+        appointment.setPatientId(1L);
+
+        Patient patient = new Patient();
+        patient.setId(1L);
+
+        PatientProfileResponse response = new PatientProfileResponse();
+        response.setPatient(patient);
 
         when(appointmentRepository.getAppointmentById(1L))
                 .thenReturn(appointment);
 
-        appointmentService.reschedule(1L, LocalDateTime.now());
+        when(patientService.getPatientByEmail("pat@gmail.com"))
+                .thenReturn(response);
+
+        appointmentService.reschedule(1L, LocalDateTime.now(), "pat@gmail.com");
 
         verify(appointmentRepository).save(appointment);
     }
@@ -114,101 +168,117 @@ class AppointmentServiceTest {
         when(appointmentRepository.getAppointmentById(1L))
                 .thenReturn(null);
 
-        assertThrows(
-                NotFoundException.class,
-                () -> appointmentService.reschedule(1L, LocalDateTime.now())
-        );
+        assertThrows(NotFoundException.class,
+                () -> appointmentService.reschedule(1L, LocalDateTime.now(), "email"));
     }
 
     @Test
-    void getAppointmentsByDoctorId_success() {
+    void reschedule_accessDenied() throws NotFoundException {
 
-        when(appointmentRepository.getAppointmentsByDoctorId(1L))
-                .thenReturn(List.of(new Appointment()));
-
-        List<Appointment> result =
-                appointmentService.getAppointmentsByDoctorId(1L);
-
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    void getAppointmentsByPatientId_success() {
-
-        when(appointmentRepository.getAppointmentsByPatientId(1L))
-                .thenReturn(List.of(new Appointment()));
-
-        List<Appointment> result =
-                appointmentService.getAppointmentsByPatientId(1L);
-
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    void deleteAppointment_success() throws Exception {
+        Appointment appointment = new Appointment();
+        appointment.setPatientId(99L);
 
         Patient patient = new Patient();
         patient.setId(10L);
 
-        PatientProfileResponse profile = new PatientProfileResponse();
-        profile.setPatient(patient);
-
-        Appointment appointment = new Appointment();
-        appointment.setPatientId(10L);
-
-        when(patientService.getPatientByEmail("test@gmail.com"))
-                .thenReturn(profile);
+        PatientProfileResponse response = new PatientProfileResponse();
+        response.setPatient(patient);
 
         when(appointmentRepository.getAppointmentById(1L))
                 .thenReturn(appointment);
 
-        appointmentService.deleteAppointment(1L, "test@gmail.com");
+        when(patientService.getPatientByEmail("pat@gmail.com"))
+                .thenReturn(response);
+
+        assertThrows(AccessDeniedException.class,
+                () -> appointmentService.reschedule(1L, LocalDateTime.now(), "pat@gmail.com"));
+    }
+
+    // ---------------- DELETE ----------------
+
+    @Test
+    void delete_success() throws Exception {
+
+        Appointment appointment = new Appointment();
+        appointment.setPatientId(1L);
+
+        Patient patient = new Patient();
+        patient.setId(1L);
+
+        PatientProfileResponse response = new PatientProfileResponse();
+        response.setPatient(patient);
+
+        when(patientService.getPatientByEmail("pat@gmail.com"))
+                .thenReturn(response);
+
+        when(appointmentRepository.getAppointmentById(1L))
+                .thenReturn(appointment);
+
+        appointmentService.deleteAppointment(1L, "pat@gmail.com");
 
         verify(appointmentRepository).deleteById(1);
     }
 
     @Test
-    void deleteAppointment_notFound() throws NotFoundException {
+    void delete_notFound() throws NotFoundException {
 
         Patient patient = new Patient();
-        patient.setId(10L);
+        patient.setId(1L);
 
-        PatientProfileResponse profile = new PatientProfileResponse();
-        profile.setPatient(patient);
+        PatientProfileResponse response = new PatientProfileResponse();
+        response.setPatient(patient);
 
-        when(patientService.getPatientByEmail("test@gmail.com"))
-                .thenReturn(profile);
+        when(patientService.getPatientByEmail("pat@gmail.com"))
+                .thenReturn(response);
 
         when(appointmentRepository.getAppointmentById(1L))
                 .thenReturn(null);
 
-        assertThrows(
-                NotFoundException.class,
-                () -> appointmentService.deleteAppointment(1L, "test@gmail.com")
-        );
+        assertThrows(NotFoundException.class,
+                () -> appointmentService.deleteAppointment(1L, "pat@gmail.com"));
     }
 
     @Test
-    void deleteAppointment_accessDenied() throws NotFoundException {
+    void delete_accessDenied() throws NotFoundException {
+
+        Appointment appointment = new Appointment();
+        appointment.setPatientId(99L);
 
         Patient patient = new Patient();
         patient.setId(10L);
 
-        PatientProfileResponse profile = new PatientProfileResponse();
-        profile.setPatient(patient);
+        PatientProfileResponse response = new PatientProfileResponse();
+        response.setPatient(patient);
 
-        Appointment appointment = new Appointment();
-        appointment.setPatientId(20L);
-
-        when(patientService.getPatientByEmail("test@gmail.com"))
-                .thenReturn(profile);
+        when(patientService.getPatientByEmail("pat@gmail.com"))
+                .thenReturn(response);
 
         when(appointmentRepository.getAppointmentById(1L))
                 .thenReturn(appointment);
 
-        assertThrows(
-                AccessDeniedException.class,
-                () -> appointmentService.deleteAppointment(1L, "test@gmail.com")
-        );
+        assertThrows(AccessDeniedException.class,
+                () -> appointmentService.deleteAppointment(1L, "pat@gmail.com"));
+    }
+
+    // ---------------- GET METHODS ----------------
+
+    @Test
+    void getByDoctor_success() {
+
+        when(appointmentRepository.getAppointmentsByDoctorId(1L))
+                .thenReturn(List.of(new Appointment()));
+
+        assertEquals(1,
+                appointmentService.getAppointmentsByDoctorId(1L).size());
+    }
+
+    @Test
+    void getByPatient_success() {
+
+        when(appointmentRepository.getAppointmentsByPatientId(1L))
+                .thenReturn(List.of(new Appointment()));
+
+        assertEquals(1,
+                appointmentService.getAppointmentsByPatientId(1L).size());
     }
 }

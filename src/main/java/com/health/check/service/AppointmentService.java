@@ -1,6 +1,8 @@
 package com.health.check.service;
 
+import com.health.check.dto.DoctorProfileResponse;
 import com.health.check.dto.PatientProfileResponse;
+import com.health.check.models.Doctor;
 import com.health.check.models.Patient;
 import com.health.check.repository.AppointmentRepository;
 import com.health.check.dto.AppointmentRequestDto;
@@ -21,18 +23,23 @@ public class AppointmentService {
 
     private final PatientService patientService;
 
-    public AppointmentService(AppointmentRepository appointmentRepository,  PatientService patientService) {
+    private final DoctorService doctorService;
+
+    public AppointmentService(AppointmentRepository appointmentRepository,  PatientService patientService,  DoctorService doctorService) {
         this.appointmentRepository = appointmentRepository;
         this.patientService = patientService;
+        this.doctorService = doctorService;
     }
 
-    public Appointment createAppointment(AppointmentRequestDto req) throws AlreadyExistsException {
+    public Appointment createAppointment(AppointmentRequestDto req) throws AlreadyExistsException, NotFoundException {
         Appointment appointment = new Appointment();
-        appointment.setDoctorId(req.getDoctorId());
+        Long doctorId = req.getDoctorId();
+        doctorService.getDoctorById(doctorId);
+        appointment.setDoctorId(doctorId);
         LocalDateTime dateTime = req.getAppointmentDateTime();
 
         // Check if the time slot is already booked
-        List<Appointment> appointments = appointmentRepository.getAppointmentsByAppointmentDateTime(dateTime);
+        List<Appointment> appointments = appointmentRepository.getAppointmentsByAppointmentDateTimeAndDoctorId(dateTime, doctorId);
         if (!appointments.isEmpty()) {
             throw new AlreadyExistsException("Time is already booked");
         }
@@ -46,20 +53,30 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
-    public void updateStatus(Long id, String status) throws NotFoundException {
+    public void updateStatus(Long id, String status, String email) throws NotFoundException {
         Appointment appointment = appointmentRepository.getAppointmentById(id);
         if (appointment == null) {
             throw new NotFoundException("appointment not found");
+        }
+        DoctorProfileResponse doctorProfileResponse = doctorService.getDoctorByEmail(email);
+        Doctor doctor = doctorProfileResponse.getDoctor();
+        if (doctor == null || !Objects.equals(doctor.getId(), appointment.getDoctorId())) {
+            throw new AccessDeniedException("doctor is not allowed to update this appointment");
         }
         // Convert string status to enum and update
         appointment.setStatus(Appointment.AppointmentStatus.valueOf(status));
         appointmentRepository.save(appointment);
     }
 
-    public void reschedule(Long id, LocalDateTime dateTime) throws NotFoundException {
+    public void reschedule(Long id, LocalDateTime dateTime, String email) throws NotFoundException {
         Appointment appointment = appointmentRepository.getAppointmentById(id);
         if (appointment == null) {
             throw new NotFoundException("appointment not found");
+        }
+        PatientProfileResponse patientProfileResponse = patientService.getPatientByEmail(email);
+        Patient patient = patientProfileResponse.getPatient();
+        if(patient == null || !Objects.equals(patient.getId(), appointment.getPatientId())){
+            throw new AccessDeniedException("patient is not allowed to reschedule this appointment");
         }
         appointment.setAppointmentDateTime(dateTime);
         appointmentRepository.save(appointment);

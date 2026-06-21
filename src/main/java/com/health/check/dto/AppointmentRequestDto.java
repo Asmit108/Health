@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 public class AppointmentRequestDto {
     @NotBlank(message = "doctorId is required")
     private Long doctorId;
-    @NotBlank(message = "patientId is required")
     private Long patientId;
     @NotBlank(message = "DateTime is required")
     private LocalDateTime appointmentDateTime;
