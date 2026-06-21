@@ -1,10 +1,8 @@
 package com.health.check.configuration;
 
 import com.health.check.models.User;
-import com.health.check.repository.UserRepository;
 import com.health.check.service.UserService;
 import jakarta.annotation.Nonnull;
-import jakarta.persistence.Access;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

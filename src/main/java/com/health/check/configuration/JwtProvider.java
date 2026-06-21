@@ -21,7 +21,7 @@ import java.util.Date;
  */
 @Component
 public class JwtProvider {
-    /** Secret key used for HMAC-SHA signing of JWT tokens */
+    /* Secret key used for HMAC-SHA signing of JWT tokens */
     /**
      * Secret key used for signing and verifying JWT tokens
      */

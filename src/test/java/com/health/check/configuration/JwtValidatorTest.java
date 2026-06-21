@@ -1,20 +1,18 @@
 package com.health.check.configuration;
 
+import com.health.check.models.User;
+import com.health.check.service.UserService;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -23,10 +21,13 @@ import static org.mockito.Mockito.*;
 class JwtValidatorTest {
 
     @InjectMocks
-    private JwtValidator filter;
+    private JwtValidator jwtValidator;
 
     @Mock
     private JwtProvider jwtProvider;
+
+    @Mock
+    private UserService userService;
 
     @Mock
     private HttpServletRequest request;
@@ -37,117 +38,122 @@ class JwtValidatorTest {
     @Mock
     private FilterChain filterChain;
 
-    // ---------------- Swagger bypass ----------------
+    @BeforeEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
-    void swaggerPath_shouldBypassFilter() throws Exception {
+    void swaggerPath_shouldSkipValidation() throws Exception {
         when(request.getServletPath()).thenReturn("/swagger-ui/index.html");
 
-        filter.doFilterInternal(request, response, filterChain);
+        jwtValidator.doFilterInternal(request, response, filterChain);
 
-        verify(filterChain, times(1)).doFilter(request, response);
+        verify(filterChain).doFilter(request, response);
     }
 
-    // ---------------- v3 bypass ----------------
-
     @Test
-    void v3Path_shouldBypassFilter() throws Exception {
+    void v3Path_shouldSkipValidation() throws Exception {
         when(request.getServletPath()).thenReturn("/v3/api-docs");
 
-        filter.doFilterInternal(request, response, filterChain);
+        jwtValidator.doFilterInternal(request, response, filterChain);
 
-        verify(filterChain, times(1)).doFilter(request, response);
+        verify(filterChain).doFilter(request, response);
     }
 
-    // ---------------- Missing JWT ----------------
-
     @Test
-    void missingJwt_shouldThrowBadCredentials() {
-        when(request.getServletPath()).thenReturn("/api/test");
-        when(request.getHeader(JwtConstant.ROLE_HEADER)).thenReturn(null);
-        when(request.getHeader(JwtConstant.JWT_HEADER)).thenReturn(null);
-
-        assertThrows(BadCredentialsException.class,
-                () -> filter.doFilterInternal(request, response, filterChain));
-    }
-
-    // ---------------- Invalid JWT format ----------------
-
-    @Test
-    void invalidJwt_shouldThrowBadCredentials() {
-        when(request.getServletPath()).thenReturn("/api/test");
-        when(request.getHeader(JwtConstant.ROLE_HEADER)).thenReturn(null);
-        when(request.getHeader(JwtConstant.JWT_HEADER)).thenReturn("InvalidToken");
-
-        assertThrows(BadCredentialsException.class,
-                () -> filter.doFilterInternal(request, response, filterChain));
-    }
-
-    // ---------------- Auth path role check ----------------
-
-    @Test
-    void authPath_PatientRole() throws ServletException, IOException {
+    void authPath_shouldSkipValidation() throws Exception {
         when(request.getServletPath()).thenReturn("/auth/signup");
-        when(request.getHeader(JwtConstant.ROLE_HEADER)).thenReturn("PATIENT");
 
-        filter.doFilterInternal(request, response, filterChain);
+        jwtValidator.doFilterInternal(request, response, filterChain);
 
-        verify(filterChain, times(1)).doFilter(request, response);
+        verify(filterChain).doFilter(request, response);
     }
 
     @Test
-    void authPath_DoctorRole() throws ServletException, IOException {
-        when(request.getServletPath()).thenReturn("/auth/signup");
-        when(request.getHeader(JwtConstant.ROLE_HEADER)).thenReturn("DOCTOR");
+    void validJwt_shouldAuthenticateSuccessfully() throws Exception {
 
-        filter.doFilterInternal(request, response, filterChain);
-
-        verify(filterChain, times(1)).doFilter(request, response);
-    }
-
-    // ---------------- Valid JWT flow ----------------
-
-    @Test
-    void validJwt_shouldSetAuthentication() throws Exception {
-
-        when(request.getServletPath()).thenReturn("/api/test");
-        when(request.getHeader(JwtConstant.JWT_HEADER)).thenReturn("Bearer validToken");
-        when(request.getHeader(JwtConstant.ROLE_HEADER)).thenReturn("PATIENT");
-
-        try (MockedStatic<JwtProvider> mocked = mockStatic(JwtProvider.class)) {
-
-            mocked.when(() -> jwtProvider.getEmailFromJwtToken("Bearer validToken"))
-                    .thenReturn("test@gmail.com");
-
-            filter.doFilterInternal(request, response, filterChain);
-
-            verify(filterChain, times(1)).doFilter(request, response);
-
-            assertNotNull(SecurityContextHolder.getContext().getAuthentication());
-        }
-    }
-
-    @Test
-    void jwtProviderThrowsException_shouldThrowBadCredentialsException() {
-
-        when(request.getServletPath()).thenReturn("/api/test");
+        when(request.getServletPath()).thenReturn("/appointments");
         when(request.getHeader(JwtConstant.JWT_HEADER))
-                .thenReturn("Bearer invalidToken");
+                .thenReturn("Bearer validToken");
         when(request.getHeader(JwtConstant.ROLE_HEADER))
                 .thenReturn("PATIENT");
 
-        when(jwtProvider.getEmailFromJwtToken("Bearer invalidToken"))
+        when(jwtProvider.getEmailFromJwtToken("Bearer validToken"))
+                .thenReturn("test@gmail.com");
+
+        User user = new User();
+        user.setRole(User.Role.PATIENT);
+
+        when(userService.getUserByEmail("test@gmail.com"))
+                .thenReturn(user);
+
+        jwtValidator.doFilterInternal(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        verify(userService).getUserByEmail("test@gmail.com");
+
+        assertNotNull(
+                SecurityContextHolder.getContext().getAuthentication()
+        );
+
+        assertEquals(
+                "test@gmail.com",
+                SecurityContextHolder.getContext()
+                        .getAuthentication()
+                        .getName()
+        );
+    }
+
+    @Test
+    void roleMismatch_shouldThrowRuntimeException() throws Exception {
+
+        when(request.getServletPath()).thenReturn("/appointments");
+        when(request.getHeader(JwtConstant.JWT_HEADER))
+                .thenReturn("Bearer token");
+        when(request.getHeader(JwtConstant.ROLE_HEADER))
+                .thenReturn("PATIENT");
+
+        when(jwtProvider.getEmailFromJwtToken("Bearer token"))
+                .thenReturn("test@gmail.com");
+
+        User user = new User();
+        user.setRole(User.Role.DOCTOR);
+
+        when(userService.getUserByEmail("test@gmail.com"))
+                .thenReturn(user);
+
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> jwtValidator.doFilterInternal(request, response, filterChain)
+        );
+
+        assertEquals(
+                "Role passed in header is wrong",
+                ex.getMessage()
+        );
+    }
+
+    @Test
+    void jwtParsingFailure_shouldThrowBadCredentialsException() throws Exception {
+
+        when(request.getServletPath()).thenReturn("/appointments");
+        when(request.getHeader(JwtConstant.JWT_HEADER))
+                .thenReturn("Bearer token");
+        when(request.getHeader(JwtConstant.ROLE_HEADER))
+                .thenReturn("PATIENT");
+
+        when(jwtProvider.getEmailFromJwtToken("Bearer token"))
                 .thenThrow(new RuntimeException("JWT parse error"));
 
-        BadCredentialsException exception =
-                assertThrows(
-                        BadCredentialsException.class,
-                        () -> filter.doFilterInternal(request, response, filterChain)
-                );
+        BadCredentialsException ex = assertThrows(
+                BadCredentialsException.class,
+                () -> jwtValidator.doFilterInternal(request, response, filterChain)
+        );
 
         assertEquals(
                 "Invalid JWT token",
-                exception.getMessage()
+                ex.getMessage()
         );
     }
 }

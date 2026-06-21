@@ -16,7 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -85,7 +84,7 @@ public class AppointmentController {
     @Operation(summary = "Delete Appointment")
     @PreAuthorize("hasRole('PATIENT')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteAppointment(@PathVariable Long id) throws NotFoundException, AccessDeniedException {
+    public ResponseEntity<String> deleteAppointment(@PathVariable Long id) throws NotFoundException {
         // Extract email from authentication token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
