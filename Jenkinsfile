@@ -14,12 +14,12 @@ pipeline {
         }
         stage('Build') {
             steps {
-                bat 'mvn clean install'
+                bat 'mvn clean install -Dspring.profiles.active=test'
             }
         }
         stage('Test') {
             steps {
-                bat 'mvn test'
+                bat 'mvn test -Dspring.profiles.active=test'
             }
         }
         stage('Deploy to Docker') {
