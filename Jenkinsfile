@@ -14,6 +14,7 @@ pipeline {
         }
         stage('Build') {
             steps {
+                bat 'set'
                 bat 'mvn clean install -Dspring.profiles.active=test'
             }
         }
