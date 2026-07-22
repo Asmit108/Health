@@ -15,7 +15,7 @@ pipeline {
         stage('Build') {
             steps {
                 bat 'set'
-                bat 'mvn clean install -Dspring.profiles.active=test'
+                bat 'mvn clean install -Dspring.datasource.url=jdbc:mysql://mysql-db:3306/health'
             }
         }
         stage('Test') {
