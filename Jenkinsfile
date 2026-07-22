@@ -20,7 +20,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-                bat 'mvn test -Dspring.profiles.active=test'
+                bat 'mvn test -Dspring.datasource.url=jdbc:mysql://localhost:3306/health'
             }
         }
         stage('Deploy to Docker') {
