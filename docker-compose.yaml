@@ -28,12 +28,12 @@ services:
       JWT_SECRET: ${JWT_SECRET}
 #    volumes:
 #      - mysql-data:/var/lib/mysql
-    networks:
-      - app-net
-
-networks:
-  app-net:
-    external: true
+#    networks:
+#      - app-net
+#
+#networks:
+#  app-net:
+#    external: true
 
 #volumes:
 #  mysql-data:
