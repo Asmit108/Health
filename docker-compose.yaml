@@ -1,22 +1,22 @@
 services:
-  mysql-db:
-    image: mysql:8.0
-    container_name: mysql-db
-    environment:
-      MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      MYSQL_DATABASE: health
-    ports:
-      - "3307:3306"
-    networks:
-      - app-net
-    volumes:
-      - mysql-data:/var/lib/mysql
+#  mysql-db:
+#    image: mysql:8.0
+#    container_name: mysql-db
+#    environment:
+#      MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+#      MYSQL_DATABASE: health
+#    ports:
+#      - "3307:3306"
+#    networks:
+#      - app-net
+#    volumes:
+#      - mysql-data:/var/lib/mysql
 
   health-app:
     build: .
     container_name: health-app
-    depends_on:
-      - mysql-db
+#    depends_on:
+#      - mysql-db
     ports:
       - "8000:8000"
     environment:
@@ -26,8 +26,8 @@ services:
       SPRING_AI_OPENAI_API_KEY: ${SPRING_AI_OPENAI_API_KEY}
       SPRING_AI_RETRY_MAX_ATTEMPTS: ${SPRING_AI_RETRY_MAX_ATTEMPTS}
       JWT_SECRET: ${JWT_SECRET}
-    volumes:
-      - mysql-data:/var/lib/mysql
+#    volumes:
+#      - mysql-data:/var/lib/mysql
     networks:
       - app-net
 
@@ -35,5 +35,5 @@ networks:
   app-net:
     external: true
 
-volumes:
-  mysql-data:
+#volumes:
+#  mysql-data:
