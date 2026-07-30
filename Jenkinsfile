@@ -29,6 +29,7 @@ pipeline {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
                     bat '''
+                    scp target/check-0.0.1-SNAPSHOT.jar ubuntu@13.204.66.133:~/Health/target/
                     ssh ubuntu@13.204.66.133 ^
                     "cd ~/Health && ^
                     git pull && ^
