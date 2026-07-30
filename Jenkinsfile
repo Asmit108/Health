@@ -4,7 +4,7 @@ pipeline {
         SPRING_DATASOURCE_USERNAME = credentials('db-username')
         SPRING_DATASOURCE_PASSWORD = credentials('db-password')
         SPRING_AI_OPENAI_API_KEY = credentials('api-key')
-        JWT_SECRET = credentials('jwt-secret'),
+        JWT_SECRET = credentials('jwt-secret')
         SPRING_SSL_KEY_STORE_PASSWORD= credentials('keystore-password')
     }
     stages {
