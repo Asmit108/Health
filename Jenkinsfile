@@ -30,16 +30,19 @@ pipeline {
 //        }
         stage('Deploy to Production') {
             steps {
-                sshagent(credentials: ['ec2-ssh-key']) {
-                    bat 'echo %SSH_AUTH_SOCK%'
+                withCredentials([sshUserPrivateKey(
+                        credentialsId: 'ec2-ssh-key',
+                        keyFileVariable: 'SSH_KEY'
+                )]) {
                     bat '''
-                    scp target/check-0.0.1-SNAPSHOT.jar ubuntu@13.204.66.133:~/Health/target/
-                    ssh ubuntu@13.204.66.133 ^
-                    "cd ~/Health && ^
-                    git pull && ^
-                    docker compose down && ^
-                    docker compose up -d --build"
-                    '''
+            scp -i "%SSH_KEY%" -o StrictHostKeyChecking=no target/check-0.0.1-SNAPSHOT.jar ubuntu@13.204.66.133:~/Health/target/
+
+            ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no ubuntu@13.204.66.133 ^
+            "cd ~/Health && ^
+            git pull && ^
+            docker compose down && ^
+            docker compose up -d --build"
+            '''
                 }
             }
         }
