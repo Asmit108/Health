@@ -16,6 +16,7 @@ pipeline {
         stage('Build') {
             steps {
                 bat 'set'
+                bat 'where ssh'
 //                bat 'mvn clean install -Dspring.datasource.url=jdbc:mysql://localhost:3306/health'
                 bat 'mvn clean install'
             }
