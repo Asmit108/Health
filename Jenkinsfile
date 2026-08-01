@@ -30,6 +30,7 @@ pipeline {
         stage('Deploy to Production') {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
+                    bat 'echo %SSH_AUTH_SOCK%'
                     bat '''
                     scp target/check-0.0.1-SNAPSHOT.jar ubuntu@13.204.66.133:~/Health/target/
                     ssh ubuntu@13.204.66.133 ^
