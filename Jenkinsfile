@@ -18,7 +18,7 @@ pipeline {
                 bat 'set'
                 bat 'where ssh'
                 bat 'ssh -V'
-                bat 'ssh-agent -s'
+                bat '"C:\\Program Files\\Git\\usr\\bin\\ssh-agent.exe" -s'
 //                bat 'mvn clean install -Dspring.datasource.url=jdbc:mysql://localhost:3306/health'
                 bat 'mvn clean install'
             }
