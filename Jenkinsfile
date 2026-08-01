@@ -37,7 +37,7 @@ pipeline {
                     bat '''
             scp -i "%SSH_KEY%" -o StrictHostKeyChecking=no target/check-0.0.1-SNAPSHOT.jar ubuntu@13.204.66.133:~/
 
-            ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no ubuntu@13.204.66.133 "if [ ! -d ~/Health/.git ]; then git clone git@github.com:Asmit108/Health.git ~/Health; fi && cd ~/Health && mkdir -p target && mv ~/check-0.0.1-SNAPSHOT.jar target/ && git pull && docker compose down && docker compose up -d --build"
+            ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no ubuntu@13.204.66.133 && cd ~/Health && mkdir -p target && mv ~/check-0.0.1-SNAPSHOT.jar target/ && git pull && docker compose down && docker compose up -d --build"
             '''
                 }
             }
