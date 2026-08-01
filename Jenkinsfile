@@ -5,7 +5,7 @@ pipeline {
         SPRING_DATASOURCE_PASSWORD = credentials('db-password')
         SPRING_AI_OPENAI_API_KEY = credentials('api-key')
         JWT_SECRET = credentials('jwt-secret')
-        SPRING_SSL_KEY_STORE_PASSWORD= credentials('keystore-password')
+        SPRING_SSL_KEY_STORE_PASSWORD = credentials('keystore-password')
     }
     stages {
         stage('Checkout') {
@@ -38,7 +38,10 @@ pipeline {
             scp -i "%SSH_KEY%" -o StrictHostKeyChecking=no target/check-0.0.1-SNAPSHOT.jar ubuntu@13.204.66.133:~/Health/target/
 
             ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no ubuntu@13.204.66.133 ^
-            "cd ~/Health && ^
+            "if [ ! -d ~/Health/.git ]; then ^
+                git clone git@github.com:Asmit108/Health.git ~/Health; ^
+            fi && ^
+            cd ~/Health && ^
             git pull && ^
             docker compose down && ^
             docker compose up -d --build"
