@@ -64,12 +64,12 @@ pipeline {
                     mv -f ~/check-0.0.1-SNAPSHOT.jar target/ && \
                     echo SPRING_DATASOURCE_URL=%SPRING_DATASOURCE_URL% > .env && \
                     echo SPRING_DATASOURCE_USERNAME=%SPRING_DATASOURCE_USERNAME% >> .env && \
-                    echo "SPRING_DATASOURCE_PASSWORD"=%SPRING_DATASOURCE_PASSWORD% >> .env && \
+                    echo SPRING_DATASOURCE_PASSWORD="%SPRING_DATASOURCE_PASSWORD%" >> .env && \
                     echo JWT_SECRET=%JWT_SECRET% >> .env && \
                     echo SPRING_AI_OPENAI_API_KEY=%SPRING_AI_OPENAI_API_KEY% >> .env && \
                     echo SPRING_AI_OPENAI_CHAT_MODEL=%SPRING_AI_OPENAI_CHAT_MODEL% >> .env && \
                     echo SPRING_AI_RETRY_MAX_ATTEMPTS=%SPRING_AI_RETRY_MAX_ATTEMPTS% >> .env && \
-                    echo "SPRING_SSL_KEY_STORE_PASSWORD"=%SPRING_SSL_KEY_STORE_PASSWORD% >> .env && \
+                    echo SPRING_SSL_KEY_STORE_PASSWORD="%SPRING_SSL_KEY_STORE_PASSWORD%" >> .env && \
                     git pull && \
                     docker compose down && \
                     docker compose up -d --build"
