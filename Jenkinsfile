@@ -57,26 +57,23 @@ pipeline {
                         )
                 ]) {
                     bat '''
-            scp -i "%SSH_KEY%" -o StrictHostKeyChecking=no target/check-0.0.1-SNAPSHOT.jar ubuntu@13.204.66.133:~/
-
-            ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no ubuntu@13.204.66.133 "
-            cd ~/Health &&
-            mkdir -p target &&
-            mv ~/check-0.0.1-SNAPSHOT.jar target/ &&
-            cat > .env <<EOF
-            SPRING_DATASOURCE_URL=%SPRING_DATASOURCE_URL%
-            SPRING_DATASOURCE_USERNAME=%SPRING_DATASOURCE_USERNAME%
-            SPRING_DATASOURCE_PASSWORD=%SPRING_DATASOURCE_PASSWORD%
-            JWT_SECRET=%JWT_SECRET%
-            SPRING_AI_OPENAI_API_KEY=%SPRING_AI_OPENAI_API_KEY%
-            SPRING_AI_OPENAI_CHAT_MODEL=%SPRING_AI_OPENAI_CHAT_MODEL%
-            SPRING_AI_RETRY_MAX_ATTEMPTS=%SPRING_AI_RETRY_MAX_ATTEMPTS%
-            SPRING_SSL_KEY_STORE_PASSWORD=%SPRING_SSL_KEY_STORE_PASSWORD%
-            EOF
-            git pull &&
-            docker compose down &&
-            docker compose up -d --build"
-            '''
+                    scp -i "%SSH_KEY%" -o StrictHostKeyChecking=no target/check-0.0.1-SNAPSHOT.jar ubuntu@13.204.66.133:~/
+                    
+                    ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no ubuntu@13.204.66.133 "cd ~/Health && \
+                    mkdir -p target && \
+                    mv -f ~/check-0.0.1-SNAPSHOT.jar target/ && \
+                    echo SPRING_DATASOURCE_URL=%SPRING_DATASOURCE_URL% > .env && \
+                    echo SPRING_DATASOURCE_USERNAME=%SPRING_DATASOURCE_USERNAME% >> .env && \
+                    echo SPRING_DATASOURCE_PASSWORD=%SPRING_DATASOURCE_PASSWORD% >> .env && \
+                    echo JWT_SECRET=%JWT_SECRET% >> .env && \
+                    echo SPRING_AI_OPENAI_API_KEY=%SPRING_AI_OPENAI_API_KEY% >> .env && \
+                    echo SPRING_AI_OPENAI_CHAT_MODEL=%SPRING_AI_OPENAI_CHAT_MODEL% >> .env && \
+                    echo SPRING_AI_RETRY_MAX_ATTEMPTS=%SPRING_AI_RETRY_MAX_ATTEMPTS% >> .env && \
+                    echo SPRING_SSL_KEY_STORE_PASSWORD=%SPRING_SSL_KEY_STORE_PASSWORD% >> .env && \
+                    git pull && \
+                    docker compose down && \
+                    docker compose up -d --build"
+                    '''
                 }
             }
         }
