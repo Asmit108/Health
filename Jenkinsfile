@@ -30,14 +30,52 @@ pipeline {
 //        }
         stage('Deploy to Production') {
             steps {
-                withCredentials([sshUserPrivateKey(
-                        credentialsId: 'ec2-ssh-key',
-                        keyFileVariable: 'SSH_KEY'
-                )]) {
+                withCredentials([
+                        sshUserPrivateKey(
+                                credentialsId: 'ec2-ssh-key',
+                                keyFileVariable: 'SSH_KEY'
+                        ),
+                        string(
+                                credentialsId: 'jwt-secret',
+                                variable: 'JWT_SECRET'
+                        ),
+                        string(
+                                credentialsId: 'api-key',
+                                variable: 'SPRING_AI_OPENAI_API_KEY'
+                        ),
+                        string(
+                                credentialsId: 'keystore-password',
+                                variable: 'SPRING_SSL_KEY_STORE_PASSWORD'
+                        ),
+                        string(
+                                credentialsId: 'db-username',
+                                variable: 'SPRING_DATASOURCE_USERNAME'
+                        ),
+                        string(
+                                credentialsId: 'db-password',
+                                variable: 'SPRING_DATASOURCE_PASSWORD'
+                        )
+                ]) {
                     bat '''
             scp -i "%SSH_KEY%" -o StrictHostKeyChecking=no target/check-0.0.1-SNAPSHOT.jar ubuntu@13.204.66.133:~/
 
-            ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no ubuntu@13.204.66.133 "cd ~/Health && mkdir -p target && mv ~/check-0.0.1-SNAPSHOT.jar target/ && git pull && docker compose down && docker compose up -d --build"
+            ssh -i "%SSH_KEY%" -o StrictHostKeyChecking=no ubuntu@13.204.66.133 "
+            cd ~/Health &&
+            mkdir -p target &&
+            mv ~/check-0.0.1-SNAPSHOT.jar target/ &&
+            cat > .env <<EOF
+            SPRING_DATASOURCE_URL=%SPRING_DATASOURCE_URL%
+            SPRING_DATASOURCE_USERNAME=%SPRING_DATASOURCE_USERNAME%
+            SPRING_DATASOURCE_PASSWORD=%SPRING_DATASOURCE_PASSWORD%
+            JWT_SECRET=%JWT_SECRET%
+            SPRING_AI_OPENAI_API_KEY=%SPRING_AI_OPENAI_API_KEY%
+            SPRING_AI_OPENAI_CHAT_MODEL=%SPRING_AI_OPENAI_CHAT_MODEL%
+            SPRING_AI_RETRY_MAX_ATTEMPTS=%SPRING_AI_RETRY_MAX_ATTEMPTS%
+            SPRING_SSL_KEY_STORE_PASSWORD=%SPRING_SSL_KEY_STORE_PASSWORD%
+            EOF
+            git pull &&
+            docker compose down &&
+            docker compose up -d --build"
             '''
                 }
             }
