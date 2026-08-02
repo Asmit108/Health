@@ -15,19 +15,10 @@ pipeline {
         }
         stage('Build') {
             steps {
-                bat 'set'
-                bat 'where ssh'
-                bat 'ssh -V'
-                bat '"C:\\Program Files\\Git\\usr\\bin\\ssh-agent.exe" -s'
 //                bat 'mvn clean install -Dspring.datasource.url=jdbc:mysql://localhost:3306/health'
                 bat 'mvn clean install'
             }
         }
-//        stage('Deploy to Docker') {
-//            steps {
-//                bat 'docker-compose up -d --build'
-//            }
-//        }
         stage('Deploy to Production') {
             steps {
                 withCredentials([
