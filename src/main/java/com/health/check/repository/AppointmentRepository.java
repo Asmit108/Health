@@ -17,7 +17,5 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 
     List<Appointment> getAppointmentsByPatientId(Long patientId);
 
-    @Query("SELECT a FROM Appointment a WHERE a.appointmentDateTime = :dateTime AND a.doctorId = :doctorId")
-    List<Appointment> getAppointmentsByAppointmentDateTimeAndDoctorId(@Param("dateTime") LocalDateTime dateTime,
-                                                                      @Param("doctorId") Long doctorId);
+    List<Appointment> getAppointmentsByAppointmentDateTimeAndDoctorId(LocalDateTime dateTime, Long doctorId);
 }

@@ -18,6 +18,5 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
                             @Param("experience") Integer experience,
                             @Param("maxFee") Double maxFee);
 
-    @Query("SELECT d FROM Doctor d WHERE d.userId = :userId")
     Doctor getDoctorByUserId(Long userId);
 }

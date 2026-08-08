@@ -9,6 +9,5 @@ import org.springframework.stereotype.Repository;
 public interface PatientRepository extends JpaRepository<Patient, Long> {
     Patient getPatientById(Long id);
 
-    @Query("SELECT p from Patient p WHERE p.userId = :userId")
     Patient getPatientByUserId(Long userId);
 }
