@@ -91,6 +91,10 @@ class AppointmentServiceTest {
         Doctor doctor = new Doctor();
         doctor.setId(10L);
 
+        Appointment newAppointment = new Appointment();
+        newAppointment.setDoctorId(doctor.getId());
+        newAppointment.setStatus(Appointment.AppointmentStatus.SCHEDULED);
+
         DoctorProfileResponse response = new DoctorProfileResponse();
         response.setDoctor(doctor);
 
@@ -100,9 +104,13 @@ class AppointmentServiceTest {
         when(doctorService.getDoctorByEmail("doc@gmail.com"))
                 .thenReturn(response);
 
-        appointmentService.updateStatus(1L, "SCHEDULED", "doc@gmail.com");
+        when(appointmentRepository.save(any())).thenReturn(newAppointment);
+
+        Appointment result = appointmentService.updateStatus(1L, "SCHEDULED", "doc@gmail.com");
 
         verify(appointmentRepository).save(appointment);
+        assertNotNull(result);
+        assertEquals(newAppointment, result);
     }
 
     @Test
@@ -137,6 +145,25 @@ class AppointmentServiceTest {
                 () -> appointmentService.updateStatus(1L, "SCHEDULED", "doc@gmail.com"));
     }
 
+    @Test
+    void updateStatus_doctorNull_accessDenied() throws NotFoundException {
+
+        Appointment appointment = new Appointment();
+        appointment.setDoctorId(10L);
+
+        DoctorProfileResponse response = new DoctorProfileResponse();
+        response.setDoctor(null);
+
+        when(appointmentRepository.getAppointmentById(1L))
+                .thenReturn(appointment);
+
+        when(doctorService.getDoctorByEmail("doc@gmail.com"))
+                .thenReturn(response);
+
+        assertThrows(AccessDeniedException.class,
+                () -> appointmentService.updateStatus(1L, "SCHEDULED", "doc@gmail.com"));
+    }
+
     // ---------------- RESCHEDULE ----------------
 
     @Test
@@ -157,9 +184,15 @@ class AppointmentServiceTest {
         when(patientService.getPatientByEmail("pat@gmail.com"))
                 .thenReturn(response);
 
-        appointmentService.reschedule(1L, LocalDateTime.now(), "pat@gmail.com");
+        LocalDateTime dateTime = LocalDateTime.now();
+
+        appointment.setAppointmentDateTime(dateTime);
+
+        when(appointmentRepository.save(any())).thenReturn(appointment);
+        Appointment result = appointmentService.reschedule(1L, dateTime, "pat@gmail.com");
 
         verify(appointmentRepository).save(appointment);
+        assertEquals(appointment, result);
     }
 
     @Test
@@ -183,6 +216,25 @@ class AppointmentServiceTest {
 
         PatientProfileResponse response = new PatientProfileResponse();
         response.setPatient(patient);
+
+        when(appointmentRepository.getAppointmentById(1L))
+                .thenReturn(appointment);
+
+        when(patientService.getPatientByEmail("pat@gmail.com"))
+                .thenReturn(response);
+
+        assertThrows(AccessDeniedException.class,
+                () -> appointmentService.reschedule(1L, LocalDateTime.now(), "pat@gmail.com"));
+    }
+
+    @Test
+    void reschedule_patientNull_accessDenied() throws NotFoundException {
+
+        Appointment appointment = new Appointment();
+        appointment.setPatientId(10L);
+
+        PatientProfileResponse response = new PatientProfileResponse();
+        response.setPatient(null);
 
         when(appointmentRepository.getAppointmentById(1L))
                 .thenReturn(appointment);
