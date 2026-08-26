@@ -2,6 +2,8 @@ package com.health.check.controller;
 
 import com.health.check.dto.DoctorDto;
 import com.health.check.dto.DoctorProfileResponse;
+import com.health.check.exceptions.NotFoundException;
+import com.health.check.models.User;
 import com.health.check.service.DoctorService;
 import com.health.check.models.Doctor;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,11 +37,11 @@ class DoctorControllerTest {
     }
 
     @Test
-    void getDoctorsSuccess() {
+    void getDoctorProfilesSuccess() throws NotFoundException {
 
-        List<Doctor> doctors = List.of(
-                new Doctor(),
-                new Doctor()
+        List<DoctorProfileResponse> doctors = List.of(
+                new DoctorProfileResponse(),
+                new DoctorProfileResponse()
         );
 
         when(doctorService.getDoctors(
@@ -49,7 +51,7 @@ class DoctorControllerTest {
                 .thenReturn(doctors);
 
         ResponseEntity<?> response =
-                doctorController.getDoctors(
+                doctorController.getDoctorProfiles(
                         "Cardiology",
                         5,
                         1000.0
@@ -89,26 +91,27 @@ class DoctorControllerTest {
     }
 
     @Test
-    void getDoctorByIdSuccess() throws Exception {
+    void getDoctorProfileByIdSuccess() throws Exception {
 
-        Doctor doctor = new Doctor();
-        doctor.setId(1L);
+        DoctorProfileResponse doctorProfileResponse = new DoctorProfileResponse();
+        doctorProfileResponse.setUser(new User());
+        doctorProfileResponse.setDoctor(new  Doctor());
 
         when(doctorService.getDoctorById(1L))
-                .thenReturn(doctor);
+                .thenReturn(doctorProfileResponse);
 
         ResponseEntity<?> response =
-                doctorController.getDoctorById(1L);
+                doctorController.getDoctorProfileById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(doctor, response.getBody());
+        assertEquals(doctorProfileResponse, response.getBody());
 
         verify(doctorService)
                 .getDoctorById(1L);
     }
 
     @Test
-    void updateDoctorSuccess() throws Exception {
+    void updateDoctorProfileSuccess() throws Exception {
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
@@ -119,21 +122,22 @@ class DoctorControllerTest {
 
         DoctorDto request = new DoctorDto();
 
-        Doctor updatedDoctor = new Doctor();
-        updatedDoctor.setId(1L);
+        DoctorProfileResponse updatedDoctorProfileResponse = new DoctorProfileResponse();
+        updatedDoctorProfileResponse.setDoctor(new Doctor());
+        updatedDoctorProfileResponse.getDoctor().setId(1L);
 
         when(doctorService.updateDoctor(
                 "doctor@test.com",
                 request))
-                .thenReturn(updatedDoctor);
+                .thenReturn(updatedDoctorProfileResponse);
 
         ResponseEntity<?> response =
-                doctorController.updateDoctor(
+                doctorController.updateDoctorProfile(
                         request
                 );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updatedDoctor, response.getBody());
+        assertEquals(updatedDoctorProfileResponse, response.getBody());
 
         verify(doctorService)
                 .updateDoctor("doctor@test.com", request);

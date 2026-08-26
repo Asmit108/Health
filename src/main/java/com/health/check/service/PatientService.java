@@ -44,11 +44,10 @@ public class PatientService {
         return new PatientProfileResponse(user, patient);
     }
 
-    public Patient updatePatient(String email, PatientDto req) throws NotFoundException {
+    public PatientProfileResponse updatePatient(String email, PatientDto req) throws NotFoundException {
         PatientProfileResponse patientProfileResponse = getPatientByEmail(email);
-        Patient patient = patientProfileResponse.getPatient();
         if (req == null) {
-            return patient;
+            return patientProfileResponse;
         }
         User user = patientProfileResponse.getUser();
 
@@ -70,7 +69,8 @@ public class PatientService {
             user.setPassword(passwordEncoder.encode(req.getPassword()));
         }
         userRepository.save(user);
-        return patient;
+        patientProfileResponse.setUser(user);
+        return patientProfileResponse;
     }
 
     public void deletePatient(Long id) throws NotFoundException {

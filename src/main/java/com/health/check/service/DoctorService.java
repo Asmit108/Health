@@ -10,6 +10,7 @@ import com.health.check.models.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,14 +30,24 @@ public class DoctorService {
 
     private final BCryptPasswordEncoder passwordEncoder;
 
-    public DoctorService(DoctorRepository doctorRepository, UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    private final UserService userService;
+
+    public DoctorService(DoctorRepository doctorRepository, UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, UserService userService) {
         this.doctorRepository = doctorRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
     }
 
-    public List<Doctor> getDoctors(String specialisation, Integer experience, Double maxFee) {
-        return doctorRepository.getDoctors(specialisation, experience, maxFee);
+    public List<DoctorProfileResponse> getDoctors(String specialisation, Integer experience, Double maxFee) throws NotFoundException {
+        List<Doctor> doctors = doctorRepository.getDoctors(specialisation, experience, maxFee);
+        List<DoctorProfileResponse> doctorProfiles = new ArrayList<>();
+        for (Doctor doctor : doctors) {
+            User user = userService.getUserById(doctor.getUserId());
+            DoctorProfileResponse doctorProfileResponse = new DoctorProfileResponse(user, doctor);
+            doctorProfiles.add(doctorProfileResponse);
+        }
+        return doctorProfiles;
     }
 
     public DoctorProfileResponse getDoctorByEmail(String email) throws NotFoundException {
@@ -53,19 +64,20 @@ public class DoctorService {
         return new DoctorProfileResponse(user, doctor);
     }
 
-    public Doctor getDoctorById(Long id) throws NotFoundException {
+    public DoctorProfileResponse getDoctorById(Long id) throws NotFoundException {
         Doctor doctor = doctorRepository.getDoctorById(id);
         if (doctor == null) {
             throw new NotFoundException("Doctor not found");
         }
-        return doctor;
+        User user = userService.getUserById(doctor.getUserId());
+        return new DoctorProfileResponse(user, doctor);
     }
 
-    public Doctor updateDoctor(String email, DoctorDto req) throws NotFoundException {
+    public DoctorProfileResponse updateDoctor(String email, DoctorDto req) throws NotFoundException {
         DoctorProfileResponse doctorProfileResponse = getDoctorByEmail(email);
         Doctor doctor = doctorProfileResponse.getDoctor();
         if (req == null) {
-            return doctor;
+            return doctorProfileResponse;
         }
         // Update doctor-specific fields if provided
         if (req.getSpecialization() != null) {
@@ -101,15 +113,14 @@ public class DoctorService {
         }
         userRepository.save(user);
         doctorRepository.save(doctor);
-        return doctor;
+        doctorProfileResponse.setUser(user);
+        doctorProfileResponse.setDoctor(doctor);
+        return doctorProfileResponse;
     }
 
     public void deleteDoctor(Long id) throws NotFoundException {
-        Doctor doctor = getDoctorById(id);
-        User user = userRepository.getUserById(doctor.getUserId());
-        if (user == null) {
-            throw new NotFoundException("User not found");
-        }
+        DoctorProfileResponse doctorProfileResponse = getDoctorById(id);
+        Doctor doctor = doctorProfileResponse.getDoctor();
         // Delete both doctor and associated user records
         userRepository.deleteById(doctor.getUserId());
         doctorRepository.deleteById(id);

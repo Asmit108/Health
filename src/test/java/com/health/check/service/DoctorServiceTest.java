@@ -29,15 +29,28 @@ class DoctorServiceTest {
     @Mock
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private DoctorService doctorService;
 
     @Test
-    void getDoctorsTest() {
+    void getDoctorsTest() throws NotFoundException {
+        Doctor doctor = new Doctor();
+        doctor.setUserId(7L);
+        User user = new User();
+        user.setId(7L);
+
         when(doctorRepository.getDoctors(null, null, null))
-                .thenReturn(java.util.List.of(new Doctor()));
+                .thenReturn(java.util.List.of(doctor));
+        when(userService.getUserById(7L)).thenReturn(user);
 
         assertEquals(1, doctorService.getDoctors(null, null, null).size());
+        assertEquals(user, doctorService.getDoctors(null, null, null).get(0).getUser());
+        assertEquals(doctor, doctorService.getDoctors(null, null, null).get(0).getDoctor());
+
+        verify(userService, times(3)).getUserById(7L);
     }
 
     @Test
@@ -87,10 +100,18 @@ class DoctorServiceTest {
     @Test
     void getDoctorById_Success() throws Exception {
         Doctor doctor = new Doctor();
+        doctor.setUserId(1L);
+        User user = new User();
+        user.setId(1L);
 
         when(doctorRepository.getDoctorById(1L)).thenReturn(doctor);
+        when(userService.getUserById(1L)).thenReturn(user);
 
-        assertEquals(doctor, doctorService.getDoctorById(1L));
+        DoctorProfileResponse response = doctorService.getDoctorById(1L);
+
+        assertNotNull(response);
+        assertEquals(user, response.getUser());
+        assertEquals(doctor, response.getDoctor());
     }
 
     @Test
@@ -101,12 +122,43 @@ class DoctorServiceTest {
 
         Doctor doctor = new Doctor();
 
+        DoctorProfileResponse doctorProfileResponse = new DoctorProfileResponse();
+        doctorProfileResponse.setDoctor(doctor);
+        doctorProfileResponse.setUser(user);
+
         when(userRepository.findByEmail("a@b.com")).thenReturn(user);
         when(doctorRepository.getDoctorByUserId(1L)).thenReturn(doctor);
 
-        Doctor result = doctorService.updateDoctor("a@b.com", null);
+        DoctorProfileResponse result = doctorService.updateDoctor("a@b.com", null);
 
-        assertEquals(doctor, result);
+        assertEquals(doctorProfileResponse, result);
+    }
+
+    @Test
+    void updateDoctor_PartialFields() throws Exception {
+        User user = new User();
+        user.setId(1L);
+
+        Doctor doctor = new Doctor();
+        doctor.setUserId(1L);
+
+        DoctorDto dto = new DoctorDto();
+        dto.setClinicAddress("New Clinic");
+        dto.setExperienceYears(0);
+        dto.setFirstName("First");
+
+        when(userRepository.findByEmail("a@b.com")).thenReturn(user);
+        when(doctorRepository.getDoctorByUserId(1L)).thenReturn(doctor);
+
+        DoctorProfileResponse result = doctorService.updateDoctor("a@b.com", dto);
+
+        assertNotNull(result);
+        assertEquals("New Clinic", doctor.getClinicAddress());
+        assertEquals(0, doctor.getExperienceYears());
+        assertEquals("First", user.getFirstName());
+        verify(userRepository).save(user);
+        verify(doctorRepository).save(doctor);
+        verify(passwordEncoder, never()).encode(anyString());
     }
 
     @Test
@@ -128,13 +180,17 @@ class DoctorServiceTest {
         dto.setSex("M");
         dto.setPassword("pass");
 
+        DoctorProfileResponse doctorProfileResponse = new DoctorProfileResponse();
+        doctorProfileResponse.setDoctor(doctor);
+        doctorProfileResponse.setUser(user);
+
         when(userRepository.findByEmail("a@b.com")).thenReturn(user);
         when(doctorRepository.getDoctorByUserId(1L)).thenReturn(doctor);
         when(passwordEncoder.encode("pass")).thenReturn("encoded");
 
-        Doctor result = doctorService.updateDoctor("a@b.com", dto);
+        DoctorProfileResponse result = doctorService.updateDoctor("a@b.com", dto);
 
-        assertEquals(doctor, result);
+        assertEquals(doctorProfileResponse, result);
 
         verify(userRepository).save(user);
         verify(doctorRepository).save(doctor);
@@ -161,12 +217,16 @@ class DoctorServiceTest {
 
         DoctorDto dto = new DoctorDto();
 
+        DoctorProfileResponse doctorProfileResponse = new DoctorProfileResponse();
+        doctorProfileResponse.setDoctor(doctor);
+        doctorProfileResponse.setUser(user);
+
         when(userRepository.findByEmail("a@b.com")).thenReturn(user);
         when(doctorRepository.getDoctorByUserId(1L)).thenReturn(doctor);
 
-        Doctor result = doctorService.updateDoctor("a@b.com", dto);
+        DoctorProfileResponse result = doctorService.updateDoctor("a@b.com", dto);
 
-        assertEquals(doctor, result);
+        assertEquals(doctorProfileResponse, result);
 
         verify(userRepository).save(user);
         verify(doctorRepository).save(doctor);
@@ -181,26 +241,15 @@ class DoctorServiceTest {
     }
 
     @Test
-    void deleteDoctor_UserNotFound(){
-        Doctor doctor = new Doctor();
-        doctor.setUserId(10L);
-
-        when(doctorRepository.getDoctorById(1L)).thenReturn(doctor);
-        when(userRepository.getUserById(10L)).thenReturn(null);
-
-        assertThrows(NotFoundException.class,
-                () -> doctorService.deleteDoctor(1L));
-    }
-
-    @Test
     void deleteDoctor_Success() throws Exception {
         Doctor doctor = new Doctor();
         doctor.setUserId(10L);
 
         User user = new User();
+        user.setId(10L);
 
         when(doctorRepository.getDoctorById(1L)).thenReturn(doctor);
-        when(userRepository.getUserById(10L)).thenReturn(user);
+        when(userService.getUserById(10L)).thenReturn(user);
 
         doctorService.deleteDoctor(1L);
 

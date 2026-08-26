@@ -47,7 +47,7 @@ class AppointmentServiceTest {
         req.setPatientId(2L);
         req.setAppointmentDateTime(LocalDateTime.now());
 
-        when(doctorService.getDoctorById(1L)).thenReturn(new Doctor());
+        when(doctorService.getDoctorById(1L)).thenReturn(new DoctorProfileResponse());
 
         when(appointmentRepository
                 .getAppointmentsByAppointmentDateTimeAndDoctorId(any(), eq(1L)))
@@ -70,7 +70,7 @@ class AppointmentServiceTest {
         req.setDoctorId(1L);
         req.setAppointmentDateTime(LocalDateTime.now());
 
-        when(doctorService.getDoctorById(1L)).thenReturn(new Doctor());
+        when(doctorService.getDoctorById(1L)).thenReturn(new DoctorProfileResponse());
 
         when(appointmentRepository
                 .getAppointmentsByAppointmentDateTimeAndDoctorId(any(), eq(1L)))

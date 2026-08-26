@@ -23,14 +23,14 @@ public class DoctorController {
         this.doctorService = doctorService;
     }
 
-    @Operation(summary = "Get Doctors")
+    @Operation(summary = "Get Doctor Profiles")
     @GetMapping("/doctors")
-    public ResponseEntity<List<Doctor>> getDoctors(
+    public ResponseEntity<List<DoctorProfileResponse>> getDoctorProfiles(
             @RequestParam(required = false) String specialization,
             @RequestParam(required = false) Integer experienceYears,
-            @RequestParam(required = false) Double maxConsultationFee) {
-        List<Doctor> doctors = doctorService.getDoctors(specialization, experienceYears, maxConsultationFee);
-        return ResponseEntity.ok(doctors);
+            @RequestParam(required = false) Double maxConsultationFee) throws NotFoundException {
+        List<DoctorProfileResponse> doctorProfiles = doctorService.getDoctors(specialization, experienceYears, maxConsultationFee);
+        return ResponseEntity.ok(doctorProfiles);
     }
 
     @Operation(summary = "Get Logged In Doctor Profile")
@@ -43,17 +43,17 @@ public class DoctorController {
         return ResponseEntity.ok(doctorService.getDoctorByEmail(email));
     }
 
-    @Operation(summary = "Get Doctor By Id")
+    @Operation(summary = "Get Doctor Profile By Id")
     @GetMapping("/doctors/{id}")
-    public ResponseEntity<Doctor> getDoctorById(@PathVariable Long id) throws NotFoundException {
-        Doctor doctor = doctorService.getDoctorById(id);
-        return ResponseEntity.ok(doctor);
+    public ResponseEntity<DoctorProfileResponse> getDoctorProfileById(@PathVariable Long id) throws NotFoundException {
+        DoctorProfileResponse doctorProfileResponse = doctorService.getDoctorById(id);
+        return ResponseEntity.ok(doctorProfileResponse);
     }
 
     @Operation(summary = "Update Logged In Doctor Details")
     @PreAuthorize("hasRole('DOCTOR')")
     @PutMapping("/doctors")
-    public ResponseEntity<Doctor> updateDoctor(@RequestBody DoctorDto req) throws NotFoundException {
+    public ResponseEntity<DoctorProfileResponse> updateDoctorProfile(@RequestBody DoctorDto req) throws NotFoundException {
         // Extract email from authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();

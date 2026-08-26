@@ -2,9 +2,11 @@ package com.health.check.controller;
 
 import com.health.check.dto.PatientDto;
 import com.health.check.dto.PatientProfileResponse;
+import com.health.check.models.User;
 import com.health.check.service.PatientService;
 import com.health.check.exceptions.NotFoundException;
 import com.health.check.models.Patient;
+import com.health.check.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,19 +21,25 @@ import java.util.Objects;
 public class PatientController {
 
     private final PatientService patientService;
+    private final UserService userService;
 
-    public PatientController(PatientService patientService) {
+    public PatientController(PatientService patientService,  UserService userService) {
         this.patientService = patientService;
+        this.userService = userService;
     }
 
-    @Operation(summary = "Get Patient By Id")
+    @Operation(summary = "Get Patient Profile By Id")
     @GetMapping("/patients/{id}")
-    public ResponseEntity<Patient> getPatientById(@PathVariable Long id) throws NotFoundException {
+    public ResponseEntity<PatientProfileResponse> getPatientProfileById(@PathVariable Long id) throws NotFoundException {
         Patient patient = patientService.getPatientById(id);
         if (Objects.isNull(patient)) {
             throw new NotFoundException("Patient not found");
         }
-        return ResponseEntity.status(HttpStatus.OK).body(patient);
+        PatientProfileResponse patientProfileResponse = new PatientProfileResponse();
+        patientProfileResponse.setPatient(patient);
+        User user = userService.getUserById(patient.getUserId());
+        patientProfileResponse.setUser(user);
+        return ResponseEntity.status(HttpStatus.OK).body(patientProfileResponse);
     }
 
     @Operation(summary = "Get Logged In Patient Profile")
@@ -47,7 +55,7 @@ public class PatientController {
     @Operation(summary = "Update Logged In Patient Details")
     @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/patients")
-    public ResponseEntity<Patient> updatePatient(@RequestBody PatientDto req) throws NotFoundException {
+    public ResponseEntity<PatientProfileResponse> updatePatientProfile(@RequestBody PatientDto req) throws NotFoundException {
         // Extract email from authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();

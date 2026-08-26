@@ -105,16 +105,20 @@ class PatientServiceTest {
         Patient patient = new Patient();
         patient.setUserId(1L);
 
+        PatientProfileResponse patientProfileResponse = new PatientProfileResponse();
+        patientProfileResponse.setUser(user);
+        patientProfileResponse.setPatient(patient);
+
         when(userRepository.findByEmail("test@gmail.com"))
                 .thenReturn(user);
 
         when(patientRepository.getPatientByUserId(1L))
                 .thenReturn(patient);
 
-        Patient result =
+        PatientProfileResponse result =
                 patientService.updatePatient("test@gmail.com", null);
 
-        assertEquals(patient, result);
+        assertEquals(patientProfileResponse, result);
     }
 
     @Test
@@ -125,6 +129,10 @@ class PatientServiceTest {
 
         Patient patient = new Patient();
         patient.setUserId(1L);
+
+        PatientProfileResponse patientProfileResponse = new PatientProfileResponse();
+        patientProfileResponse.setUser(user);
+        patientProfileResponse.setPatient(patient);
 
         PatientDto dto = new PatientDto();
         dto.setAge(25);
@@ -142,10 +150,10 @@ class PatientServiceTest {
         when(passwordEncoder.encode("password"))
                 .thenReturn("encodedPassword");
 
-        Patient result =
+        PatientProfileResponse result =
                 patientService.updatePatient("test@gmail.com", dto);
 
-        assertEquals(patient, result);
+        assertEquals(patientProfileResponse, result);
 
         verify(userRepository).save(user);
 

@@ -2,9 +2,11 @@ package com.health.check.controller;
 
 import com.health.check.dto.PatientDto;
 import com.health.check.dto.PatientProfileResponse;
+import com.health.check.models.User;
 import com.health.check.service.PatientService;
 import com.health.check.exceptions.NotFoundException;
 import com.health.check.models.Patient;
+import com.health.check.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,6 +28,9 @@ class PatientControllerTest {
     @Mock
     private PatientService patientService;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private PatientController patientController;
 
@@ -34,40 +40,49 @@ class PatientControllerTest {
     }
 
     @Test
-    void getPatientByIdSuccess() throws Exception {
+    void getPatientProfileByIdSuccess() throws Exception {
 
         Patient patient = new Patient();
         patient.setId(1L);
+        patient.setUserId(99L);
 
         when(patientService.getPatientById(1L))
                 .thenReturn(patient);
 
-        ResponseEntity<?> response =
-                patientController.getPatientById(1L);
+        User user = new User();
+        user.setId(99L);
+        user.setEmail("patient@test.com");
+
+        when(userService.getUserById(99L))
+                .thenReturn(user);
+
+        ResponseEntity<PatientProfileResponse> response =
+                patientController.getPatientProfileById(1L);
 
         assertEquals(
                 HttpStatus.OK,
                 response.getStatusCode()
         );
 
-        assertEquals(
-                patient,
-                response.getBody()
-        );
+        assertNotNull(response.getBody());
+        assertEquals(patient, response.getBody().getPatient());
+        assertEquals(user, response.getBody().getUser());
 
         verify(patientService)
                 .getPatientById(1L);
+        verify(userService)
+                .getUserById(99L);
     }
 
     @Test
-    void getPatientByIdNotFound() {
+    void getPatientProfileByIdNotFound() {
 
         when(patientService.getPatientById(1L))
                 .thenReturn(null);
 
         assertThrows(
                 NotFoundException.class,
-                () -> patientController.getPatientById(1L)
+                () -> patientController.getPatientProfileById(1L)
         );
 
         verify(patientService)
@@ -91,7 +106,7 @@ class PatientControllerTest {
                 "patient@test.com"))
                 .thenReturn(profileResponse);
 
-        ResponseEntity<?> response =
+        ResponseEntity<PatientProfileResponse> response =
                 patientController.getPatientProfile();
 
         assertEquals(
@@ -99,10 +114,7 @@ class PatientControllerTest {
                 response.getStatusCode()
         );
 
-        assertEquals(
-                profileResponse,
-                response.getBody()
-        );
+        assertEquals(profileResponse, response.getBody());
 
         verify(patientService)
                 .getPatientByEmail(
@@ -111,27 +123,28 @@ class PatientControllerTest {
     }
 
     @Test
-    void updatePatientSuccess() throws Exception {
-
+    void updatePatientProfileSuccess() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
                         "patient@test.com",
                         null
                 )
         );
-
         PatientDto request = new PatientDto();
 
         Patient updatedPatient = new Patient();
         updatedPatient.setId(1L);
 
+        PatientProfileResponse patientProfileResponse = new PatientProfileResponse();
+        patientProfileResponse.setPatient(updatedPatient);
+
         when(patientService.updatePatient(
                 "patient@test.com",
                 request))
-                .thenReturn(updatedPatient);
+                .thenReturn(patientProfileResponse);
 
-        ResponseEntity<?> response =
-                patientController.updatePatient(
+        ResponseEntity<PatientProfileResponse> response =
+                patientController.updatePatientProfile(
                         request
                 );
 
@@ -140,10 +153,7 @@ class PatientControllerTest {
                 response.getStatusCode()
         );
 
-        assertEquals(
-                updatedPatient,
-                response.getBody()
-        );
+        assertEquals(patientProfileResponse, response.getBody());
 
         verify(patientService)
                 .updatePatient(
