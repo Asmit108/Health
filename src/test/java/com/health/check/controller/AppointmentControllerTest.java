@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -70,7 +70,7 @@ class AppointmentControllerTest {
         ResponseEntity<Appointment> response =
                 appointmentController.createAppointment(dto);
 
-        assertEquals(201, response.getStatusCodeValue());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(1L, dto.getPatientId());
 
         verify(appointmentService).createAppointment(dto);
@@ -87,7 +87,8 @@ class AppointmentControllerTest {
         ResponseEntity<String> response =
                 appointmentController.updateStatus(1L, "APPROVED");
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
         assertTrue(response.getBody().contains("updated"));
 
         verify(appointmentService).updateStatus(1L, "APPROVED", "doc@gmail.com");
@@ -106,7 +107,8 @@ class AppointmentControllerTest {
         ResponseEntity<String> response =
                 appointmentController.reschedule(1L, time);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
         verify(appointmentService).reschedule(1L, time, "test@gmail.com");
     }
 
@@ -121,7 +123,8 @@ class AppointmentControllerTest {
         ResponseEntity<List<Appointment>> response =
                 appointmentController.getAppointmentsByDoctorId(1L);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
         assertEquals(1, response.getBody().size());
     }
 
@@ -136,7 +139,7 @@ class AppointmentControllerTest {
         ResponseEntity<List<Appointment>> response =
                 appointmentController.getAppointmentsByPatientId(1L);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().size());
     }
@@ -152,7 +155,8 @@ class AppointmentControllerTest {
         ResponseEntity<String> response =
                 appointmentController.deleteAppointment(1L);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
         assertTrue(response.getBody().contains("deleted"));
 
         verify(appointmentService).deleteAppointment(1L, "test@gmail.com");

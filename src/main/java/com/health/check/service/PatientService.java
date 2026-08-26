@@ -2,7 +2,6 @@ package com.health.check.service;
 
 import com.health.check.dto.PatientDto;
 import com.health.check.dto.PatientProfileResponse;
-import com.health.check.models.Doctor;
 import com.health.check.repository.PatientRepository;
 import com.health.check.repository.UserRepository;
 import com.health.check.exceptions.NotFoundException;
