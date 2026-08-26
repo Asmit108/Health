@@ -81,15 +81,17 @@ class AppointmentControllerTest {
 
         mockSecurityContext("doc@gmail.com");
 
-        doNothing().when(appointmentService)
-                .updateStatus(1L, "APPROVED", "doc@gmail.com");
+        Appointment appointment = new Appointment();
+        when(appointmentService
+                .updateStatus(1L, "APPROVED", "doc@gmail.com"))
+                .thenReturn(appointment);
 
-        ResponseEntity<String> response =
+        ResponseEntity<Appointment> response =
                 appointmentController.updateStatus(1L, "APPROVED");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("updated"));
+        assertEquals(appointment, response.getBody());
 
         verify(appointmentService).updateStatus(1L, "APPROVED", "doc@gmail.com");
     }
@@ -101,14 +103,17 @@ class AppointmentControllerTest {
 
         LocalDateTime time = LocalDateTime.now();
 
-        doNothing().when(appointmentService)
-                .reschedule(1L, time, "test@gmail.com");
+        Appointment appointment = new Appointment();
+        when(appointmentService
+                .reschedule(1L, time, "test@gmail.com"))
+                .thenReturn(appointment);
 
-        ResponseEntity<String> response =
+        ResponseEntity<Appointment> response =
                 appointmentController.reschedule(1L, time);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
+        assertEquals(appointment, response.getBody());
         verify(appointmentService).reschedule(1L, time, "test@gmail.com");
     }
 

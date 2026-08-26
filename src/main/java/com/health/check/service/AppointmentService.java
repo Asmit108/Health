@@ -53,7 +53,7 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
-    public void updateStatus(Long id, String status, String email) throws NotFoundException {
+    public Appointment updateStatus(Long id, String status, String email) throws NotFoundException {
         Appointment appointment = appointmentRepository.getAppointmentById(id);
         if (appointment == null) {
             throw new NotFoundException("appointment not found");
@@ -65,10 +65,10 @@ public class AppointmentService {
         }
         // Convert string status to enum and update
         appointment.setStatus(Appointment.AppointmentStatus.valueOf(status));
-        appointmentRepository.save(appointment);
+        return appointmentRepository.save(appointment);
     }
 
-    public void reschedule(Long id, LocalDateTime dateTime, String email) throws NotFoundException {
+    public Appointment reschedule(Long id, LocalDateTime dateTime, String email) throws NotFoundException {
         Appointment appointment = appointmentRepository.getAppointmentById(id);
         if (appointment == null) {
             throw new NotFoundException("appointment not found");
@@ -79,7 +79,7 @@ public class AppointmentService {
             throw new AccessDeniedException("patient is not allowed to reschedule this appointment");
         }
         appointment.setAppointmentDateTime(dateTime);
-        appointmentRepository.save(appointment);
+        return appointmentRepository.save(appointment);
     }
 
     public List<Appointment> getAppointmentsByDoctorId(Long doctorId) {

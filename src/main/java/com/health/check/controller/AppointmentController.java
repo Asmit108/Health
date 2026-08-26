@@ -50,23 +50,23 @@ public class AppointmentController {
     @Operation(summary = "Update Status of Appointment")
     @PreAuthorize("hasRole('DOCTOR')")
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateStatus(@PathVariable Long id, @RequestParam String status) throws NotFoundException {
+    public ResponseEntity<Appointment> updateStatus(@PathVariable Long id, @RequestParam String status) throws NotFoundException {
         // Extract email from authentication token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-        appointmentService.updateStatus(id, status, email);
-        return ResponseEntity.ok("Appointment status updated successfully");
+        Appointment appointment = appointmentService.updateStatus(id, status, email);
+        return ResponseEntity.ok(appointment);
     }
 
     @Operation(summary = "Reschedule Appointment")
     @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/{id}/reschedule")
-    public ResponseEntity<String> reschedule(@PathVariable Long id, @RequestParam LocalDateTime dateTime) throws NotFoundException {
+    public ResponseEntity<Appointment> reschedule(@PathVariable Long id, @RequestParam LocalDateTime dateTime) throws NotFoundException {
         // Extract email from authentication token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-        appointmentService.reschedule(id, dateTime, email);
-        return ResponseEntity.ok("Appointment date updated successfully");
+        Appointment appointment = appointmentService.reschedule(id, dateTime, email);
+        return ResponseEntity.ok(appointment);
     }
 
     @Operation(summary = "Get Appointments by Doctor Id")
