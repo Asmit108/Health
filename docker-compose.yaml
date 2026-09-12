@@ -27,6 +27,7 @@ services:
       SPRING_AI_RETRY_MAX_ATTEMPTS: ${SPRING_AI_RETRY_MAX_ATTEMPTS}
       JWT_SECRET: ${JWT_SECRET}
       SPRING_SSL_KEY_STORE_PASSWORD: ${SPRING_SSL_KEY_STORE_PASSWORD}
+    restart: unless-stopped
 #    volumes:
 #      - mysql-data:/var/lib/mysql
 #    networks:
