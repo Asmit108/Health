@@ -1,5 +1,6 @@
 package com.health.check.configuration;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.ai.chat.client.ChatClient;
@@ -107,7 +108,7 @@ public class AppConfig {
             CorsConfiguration cfg = new CorsConfiguration();
 
             // Allow requests from frontend (localhost:3000)
-            cfg.setAllowedOrigins(List.of("http://localhost:3000")); // no trailing slash
+            cfg.setAllowedOrigins(List.of("https://13.204.66.133:8000")); // no trailing slash
 
             // Allow standard HTTP methods
             cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH"));
