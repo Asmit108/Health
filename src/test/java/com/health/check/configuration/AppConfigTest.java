@@ -50,7 +50,7 @@ class AppConfigTest {
         CorsConfiguration config = source.getCorsConfiguration(request);
 
         assertNotNull(config);
-        assertEquals(List.of("http://13.204.66.133:3000"), config.getAllowedOrigins());
+        assertEquals(List.of("https://13.204.66.133:3000"), config.getAllowedOrigins());
         assertNotNull(config.getAllowedMethods());
         assertTrue(config.getAllowedMethods().contains("GET"));
         assertNotNull(config.getAllowedHeaders());
