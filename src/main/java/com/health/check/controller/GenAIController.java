@@ -36,7 +36,10 @@ public class GenAIController {
     @Operation(summary = "Check Symptoms")
     @PreAuthorize("hasRole('PATIENT')")
     @PostMapping("/check")
-    public ResponseEntity<SymptomResponseDto> check(@Valid @RequestBody SymptomRequestDto request) throws NotFoundException {
+    public ResponseEntity<SymptomResponseDto> check(
+            @Valid @RequestBody SymptomRequestDto request,
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException {
         // Extract email from authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();

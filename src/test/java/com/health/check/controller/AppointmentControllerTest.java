@@ -68,7 +68,7 @@ class AppointmentControllerTest {
                 .thenReturn(appointment);
 
         ResponseEntity<Appointment> response =
-                appointmentController.createAppointment(dto);
+                appointmentController.createAppointment(dto,"ac","ac");
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(1L, dto.getPatientId());
@@ -87,7 +87,7 @@ class AppointmentControllerTest {
                 .thenReturn(appointment);
 
         ResponseEntity<Appointment> response =
-                appointmentController.updateStatus(1L, "APPROVED");
+                appointmentController.updateStatus(1L, "APPROVED","ac","ac");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -109,7 +109,7 @@ class AppointmentControllerTest {
                 .thenReturn(appointment);
 
         ResponseEntity<Appointment> response =
-                appointmentController.reschedule(1L, time);
+                appointmentController.reschedule(1L, time,"ac","ac");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -126,7 +126,7 @@ class AppointmentControllerTest {
                 .thenReturn(list);
 
         ResponseEntity<List<Appointment>> response =
-                appointmentController.getAppointmentsByDoctorId(1L);
+                appointmentController.getAppointmentsByDoctorId(1L, "ac","ac");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -142,7 +142,7 @@ class AppointmentControllerTest {
                 .thenReturn(list);
 
         ResponseEntity<List<Appointment>> response =
-                appointmentController.getAppointmentsByPatientId(1L);
+                appointmentController.getAppointmentsByPatientId(1L, "ac","ac");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -158,7 +158,7 @@ class AppointmentControllerTest {
                 .deleteAppointment(1L, "test@gmail.com");
 
         ResponseEntity<String> response =
-                appointmentController.deleteAppointment(1L);
+                appointmentController.deleteAppointment(1L,"ac","ac");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());

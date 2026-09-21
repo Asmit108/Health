@@ -26,6 +26,8 @@ public class DoctorController {
     @Operation(summary = "Get Doctor Profiles")
     @GetMapping("/doctors")
     public ResponseEntity<List<DoctorProfileResponse>> getDoctorProfiles(
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role,
             @RequestParam(required = false) String specialization,
             @RequestParam(required = false) Integer experienceYears,
             @RequestParam(required = false) Double maxConsultationFee) throws NotFoundException {
@@ -36,7 +38,9 @@ public class DoctorController {
     @Operation(summary = "Get Logged In Doctor Profile")
     @PreAuthorize("hasRole('DOCTOR')")
     @GetMapping("/doctors/profile")
-    public ResponseEntity<DoctorProfileResponse> getDoctorProfile() throws NotFoundException {
+    public ResponseEntity<DoctorProfileResponse> getDoctorProfile(
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException {
         // Extract email from authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -45,7 +49,10 @@ public class DoctorController {
 
     @Operation(summary = "Get Doctor Profile By Id")
     @GetMapping("/doctors/{id}")
-    public ResponseEntity<DoctorProfileResponse> getDoctorProfileById(@PathVariable Long id) throws NotFoundException {
+    public ResponseEntity<DoctorProfileResponse> getDoctorProfileById(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException {
         DoctorProfileResponse doctorProfileResponse = doctorService.getDoctorById(id);
         return ResponseEntity.ok(doctorProfileResponse);
     }
@@ -53,7 +60,10 @@ public class DoctorController {
     @Operation(summary = "Update Logged In Doctor Details")
     @PreAuthorize("hasRole('DOCTOR')")
     @PutMapping("/doctors")
-    public ResponseEntity<DoctorProfileResponse> updateDoctorProfile(@RequestBody DoctorDto req) throws NotFoundException {
+    public ResponseEntity<DoctorProfileResponse> updateDoctorProfile(
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role,
+            @RequestBody DoctorDto req) throws NotFoundException {
         // Extract email from authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -63,7 +73,9 @@ public class DoctorController {
     @Operation(summary = "Delete Logged In Doctor")
     @PreAuthorize("hasRole('DOCTOR')")
     @DeleteMapping("/doctors")
-    public ResponseEntity<String> deleteDoctor() throws NotFoundException {
+    public ResponseEntity<String> deleteDoctor(
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException {
         // Extract email from authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();

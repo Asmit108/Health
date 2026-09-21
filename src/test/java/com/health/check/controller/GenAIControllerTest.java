@@ -78,7 +78,9 @@ class GenAIControllerTest {
 
         ResponseEntity<?> response =
                 genAIController.check(
-                        request
+                        request,
+                        "ac",
+                        "ac"
                 );
 
         assertEquals(

@@ -52,6 +52,8 @@ class DoctorControllerTest {
 
         ResponseEntity<?> response =
                 doctorController.getDoctorProfiles(
+                        "ac",
+                        "ac",
                         "Cardiology",
                         5,
                         1000.0
@@ -81,7 +83,7 @@ class DoctorControllerTest {
                 .thenReturn(profileResponse);
 
         ResponseEntity<?> response =
-                doctorController.getDoctorProfile();
+                doctorController.getDoctorProfile("abc","ac");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(profileResponse, response.getBody());
@@ -101,7 +103,7 @@ class DoctorControllerTest {
                 .thenReturn(doctorProfileResponse);
 
         ResponseEntity<?> response =
-                doctorController.getDoctorProfileById(1L);
+                doctorController.getDoctorProfileById(1L,"ac","ac");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(doctorProfileResponse, response.getBody());
@@ -133,6 +135,8 @@ class DoctorControllerTest {
 
         ResponseEntity<?> response =
                 doctorController.updateDoctorProfile(
+                        "abc",
+                        "ac",
                         request
                 );
 
@@ -165,7 +169,7 @@ class DoctorControllerTest {
                 .thenReturn(profileResponse);
 
         ResponseEntity<?> response =
-                doctorController.deleteDoctor();
+                doctorController.deleteDoctor("ac","ac");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(

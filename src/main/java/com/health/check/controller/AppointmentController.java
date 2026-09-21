@@ -36,7 +36,10 @@ public class AppointmentController {
     @Operation(summary = "Create Appointment")
     @PreAuthorize("hasRole('PATIENT')")
     @PostMapping
-    public ResponseEntity<Appointment> createAppointment(@Valid @RequestBody AppointmentRequestDto req) throws NotFoundException, AlreadyExistsException {
+    public ResponseEntity<Appointment> createAppointment(
+            @Valid @RequestBody AppointmentRequestDto req,
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException, AlreadyExistsException {
         // Extract email from authentication token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -51,7 +54,11 @@ public class AppointmentController {
     @Operation(summary = "Update Status of Appointment")
     @PreAuthorize("hasRole('DOCTOR')")
     @PutMapping("/{id}")
-    public ResponseEntity<Appointment> updateStatus(@PathVariable Long id, @RequestParam String status) throws NotFoundException {
+    public ResponseEntity<Appointment> updateStatus(
+            @PathVariable Long id,
+            @RequestParam String status,
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException {
         // Extract email from authentication token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -62,7 +69,11 @@ public class AppointmentController {
     @Operation(summary = "Reschedule Appointment")
     @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/{id}/reschedule")
-    public ResponseEntity<Appointment> reschedule(@PathVariable Long id, @RequestParam LocalDateTime dateTime) throws NotFoundException {
+    public ResponseEntity<Appointment> reschedule(
+            @PathVariable Long id,
+            @RequestParam LocalDateTime dateTime,
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException {
         // Extract email from authentication token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -72,20 +83,29 @@ public class AppointmentController {
 
     @Operation(summary = "Get Appointments by Doctor Id")
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByDoctorId(@PathVariable Long doctorId) {
+    public ResponseEntity<List<Appointment>> getAppointmentsByDoctorId(
+            @PathVariable Long doctorId,
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) {
         return ResponseEntity.ok(appointmentService.getAppointmentsByDoctorId(doctorId));
     }
 
     @Operation(summary = "Get Appointments by Patient Id")
     @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByPatientId(@PathVariable Long patientId) {
+    public ResponseEntity<List<Appointment>> getAppointmentsByPatientId(
+            @PathVariable Long patientId,
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) {
         return ResponseEntity.ok(appointmentService.getAppointmentsByPatientId(patientId));
     }
 
     @Operation(summary = "Delete Appointment")
     @PreAuthorize("hasRole('PATIENT')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteAppointment(@PathVariable Long id) throws NotFoundException {
+    public ResponseEntity<String> deleteAppointment(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException {
         // Extract email from authentication token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();

@@ -30,7 +30,10 @@ public class PatientController {
 
     @Operation(summary = "Get Patient Profile By Id")
     @GetMapping("/patients/{id}")
-    public ResponseEntity<PatientProfileResponse> getPatientProfileById(@PathVariable Long id) throws NotFoundException {
+    public ResponseEntity<PatientProfileResponse> getPatientProfileById(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException {
         Patient patient = patientService.getPatientById(id);
         if (Objects.isNull(patient)) {
             throw new NotFoundException("Patient not found");
@@ -45,7 +48,9 @@ public class PatientController {
     @Operation(summary = "Get Logged In Patient Profile")
     @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/patients/profile")
-    public ResponseEntity<PatientProfileResponse> getPatientProfile() throws NotFoundException {
+    public ResponseEntity<PatientProfileResponse> getPatientProfile(
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException {
         // Extract email from authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -55,7 +60,10 @@ public class PatientController {
     @Operation(summary = "Update Logged In Patient Details")
     @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/patients")
-    public ResponseEntity<PatientProfileResponse> updatePatientProfile(@RequestBody PatientDto req) throws NotFoundException {
+    public ResponseEntity<PatientProfileResponse> updatePatientProfile(
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role,
+            @RequestBody PatientDto req) throws NotFoundException {
         // Extract email from authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -65,7 +73,9 @@ public class PatientController {
     @Operation(summary = "Delete Logged In Patient")
     @PreAuthorize("hasRole('PATIENT')")
     @DeleteMapping("/patients")
-    public ResponseEntity<String> deletePatient() throws NotFoundException {
+    public ResponseEntity<String> deletePatient(
+            @RequestHeader("Authorization") String jwt,
+            @RequestHeader("Role") String role) throws NotFoundException {
         // Extract email from authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();

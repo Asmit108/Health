@@ -56,7 +56,7 @@ class PatientControllerTest {
                 .thenReturn(user);
 
         ResponseEntity<PatientProfileResponse> response =
-                patientController.getPatientProfileById(1L);
+                patientController.getPatientProfileById(1L,"ac","ac");
 
         assertEquals(
                 HttpStatus.OK,
@@ -81,7 +81,7 @@ class PatientControllerTest {
 
         assertThrows(
                 NotFoundException.class,
-                () -> patientController.getPatientProfileById(1L)
+                () -> patientController.getPatientProfileById(1L,"ac","ac")
         );
 
         verify(patientService)
@@ -106,7 +106,7 @@ class PatientControllerTest {
                 .thenReturn(profileResponse);
 
         ResponseEntity<PatientProfileResponse> response =
-                patientController.getPatientProfile();
+                patientController.getPatientProfile("ac","ac");
 
         assertEquals(
                 HttpStatus.OK,
@@ -144,6 +144,8 @@ class PatientControllerTest {
 
         ResponseEntity<PatientProfileResponse> response =
                 patientController.updatePatientProfile(
+                        "ac",
+                        "ac",
                         request
                 );
 
@@ -183,7 +185,7 @@ class PatientControllerTest {
                 .thenReturn(profileResponse);
 
         ResponseEntity<String> response =
-                patientController.deletePatient();
+                patientController.deletePatient("ac","ac");
 
         assertEquals(
                 HttpStatus.OK,
