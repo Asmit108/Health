@@ -1,6 +1,7 @@
 package com.health.check.controller;
 
 import com.health.check.configuration.JwtProvider;
+import com.health.check.dto.LoginRequestDto;
 import com.health.check.dto.RegisterRequestDto;
 import com.health.check.repository.DoctorRepository;
 import com.health.check.repository.PatientRepository;
@@ -146,7 +147,7 @@ class AuthControllerTest {
     @Test
     void signinSuccess() {
 
-        RegisterRequestDto loginRequest = new RegisterRequestDto();
+        LoginRequestDto loginRequest = new LoginRequestDto();
         loginRequest.setEmail("user@test.com");
         loginRequest.setPassword("123");
 
@@ -177,7 +178,7 @@ class AuthControllerTest {
     @Test
     void signinUserNotFound() {
 
-        RegisterRequestDto loginRequest = new RegisterRequestDto();
+        LoginRequestDto loginRequest = new LoginRequestDto();
         loginRequest.setEmail("unknown@test.com");
 
         when(userRepository.findByEmail("unknown@test.com"))
@@ -192,7 +193,7 @@ class AuthControllerTest {
     @Test
     void signinWrongPassword() {
 
-        RegisterRequestDto loginRequest = new RegisterRequestDto();
+        LoginRequestDto loginRequest = new LoginRequestDto();
         loginRequest.setEmail("user@test.com");
         loginRequest.setPassword("wrong");
 

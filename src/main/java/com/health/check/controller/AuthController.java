@@ -2,6 +2,7 @@ package com.health.check.controller;
 
 import com.health.check.configuration.JwtProvider;
 import com.health.check.dto.AuthResponse;
+import com.health.check.dto.LoginRequestDto;
 import com.health.check.dto.RegisterRequestDto;
 import com.health.check.repository.DoctorRepository;
 import com.health.check.repository.PatientRepository;
@@ -99,7 +100,7 @@ public class AuthController {
 
     @Operation(summary = "Login User")
     @PostMapping("/signin")
-    public ResponseEntity<AuthResponse> signin(@Valid @RequestBody RegisterRequestDto loginRequest) {
+    public ResponseEntity<AuthResponse> signin(@Valid @RequestBody LoginRequestDto loginRequest) {
         // Authenticate user credentials
         Authentication authentication = authenticate(loginRequest);
         // Generate JWT token
@@ -109,7 +110,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(new AuthResponse(token, "login success", user.getRole().toString()));
     }
 
-    private Authentication authenticate(RegisterRequestDto loginRequest) {
+    private Authentication authenticate(LoginRequestDto loginRequest) {
         // Find user by email
         User userDetails = userRepository.findByEmail(loginRequest.getEmail());
         if (userDetails == null) {
