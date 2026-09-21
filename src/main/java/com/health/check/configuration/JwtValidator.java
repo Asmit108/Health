@@ -1,5 +1,6 @@
 package com.health.check.configuration;
 
+import com.health.check.exceptions.NotFoundException;
 import com.health.check.models.User;
 import com.health.check.service.UserService;
 import jakarta.annotation.Nonnull;
@@ -59,16 +60,33 @@ public class JwtValidator extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull FilterChain filterChain) throws ServletException, IOException {
         String path = request.getServletPath();
 
-        // Skip JWT validation for Swagger/API documentation endpoints
-        if (path.contains("/swagger-ui") || path.contains("/v3")) {
+        // Skip JWT validation for Swagger/API documentation endpoints and auth endpoints
+        if (path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/api/auth/")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         // Extract role from request header
-        String role = request.getHeader(JwtConstant.ROLE_HEADER);
+        String roleHeader = request.getHeader(JwtConstant.ROLE_HEADER);
 
-        // For authentication endpoints, validate that role is either PATIENT or DOCTOR
+        if (roleHeader == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Role header is missing");
+            return;
+        }
+
+        User.Role role;
+        try {
+            role = User.Role.valueOf(roleHeader);
+        } catch (IllegalArgumentException ex) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid role");
+            return;
+        }
+
+        // For authentication endpoints, no need to validate JWT token
         if (path.contains("/auth/")) {
             filterChain.doFilter(request, response);
             return;
@@ -79,35 +97,38 @@ public class JwtValidator extends OncePerRequestFilter {
 
         // Validate JWT token exists and has correct format
         if (jwt == null || !jwt.startsWith("Bearer ")) {
-            throw new BadCredentialsException("Invalid or missing JWT token");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid or missing JWT token");
+            return;
         }
 
+        // Extract email from JWT token
+        String email = jwtProvider.getEmailFromJwtToken(jwt);
+        User user;
         try {
-            // Extract email from JWT token
-            String email = jwtProvider.getEmailFromJwtToken(jwt);
-            User user = userService.getUserByEmail(email);
-            if(!Objects.equals(user.getRole().toString(), role)) {
-                throw new Exception("Role passed in header is wrong");
-            }
-            // Create authorities list with user role
-            Collection<? extends GrantedAuthority> authorities =
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role));
-
-            // Create authentication object with email and role
-            Authentication authentication =
-                    new UsernamePasswordAuthenticationToken(email, null, authorities);
-
-            // Set authentication in security context for this request
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        } catch (Exception e) {
-            if ("Role passed in header is wrong".equals(e.getMessage())) {
-                throw new RuntimeException("Role passed in header is wrong");
-            }
-            else{
-                throw new BadCredentialsException("Invalid JWT token");
-            }
+            user = userService.getUserByEmail(email);
+        } catch (NotFoundException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("User not found");
+            return;
         }
+        if(!Objects.equals(user.getRole(), role)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Role passed in header is wrong");
+            return;
+        }
+
+        // Create authorities list with user role
+        Collection<? extends GrantedAuthority> authorities =
+                List.of(new SimpleGrantedAuthority("ROLE_" + role));
+
+        // Create authentication object with email and role
+        Authentication authentication =
+                new UsernamePasswordAuthenticationToken(email, null, authorities);
+
+        // Set authentication in security context for this request
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
 
         // Continue the request to the next filter in the chain
         filterChain.doFilter(request, response);

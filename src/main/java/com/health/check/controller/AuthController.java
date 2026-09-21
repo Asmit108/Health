@@ -12,6 +12,7 @@ import com.health.check.models.User;
 import com.health.check.repository.UserRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -49,7 +50,7 @@ public class AuthController {
 
     @Operation(summary = "Register User")
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> createUser(@RequestBody RegisterRequestDto registerRequest) throws Exception {
+    public ResponseEntity<AuthResponse> createUser(@Valid @RequestBody RegisterRequestDto registerRequest) throws Exception {
         // Check if user already exists
         User isExist = userRepository.findByEmail(registerRequest.getEmail());
         if (isExist != null) {
@@ -98,7 +99,7 @@ public class AuthController {
 
     @Operation(summary = "Login User")
     @PostMapping("/signin")
-    public ResponseEntity<AuthResponse> signin(@RequestBody RegisterRequestDto loginRequest) {
+    public ResponseEntity<AuthResponse> signin(@Valid @RequestBody RegisterRequestDto loginRequest) {
         // Authenticate user credentials
         Authentication authentication = authenticate(loginRequest);
         // Generate JWT token

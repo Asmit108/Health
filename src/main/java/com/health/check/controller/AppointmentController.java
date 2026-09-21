@@ -9,6 +9,7 @@ import com.health.check.exceptions.NotFoundException;
 import com.health.check.models.Appointment;
 import com.health.check.models.Patient;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,7 +36,7 @@ public class AppointmentController {
     @Operation(summary = "Create Appointment")
     @PreAuthorize("hasRole('PATIENT')")
     @PostMapping
-    public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentRequestDto req) throws NotFoundException, AlreadyExistsException {
+    public ResponseEntity<Appointment> createAppointment(@Valid @RequestBody AppointmentRequestDto req) throws NotFoundException, AlreadyExistsException {
         // Extract email from authentication token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
