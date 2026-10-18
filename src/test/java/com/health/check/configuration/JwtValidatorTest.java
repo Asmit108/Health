@@ -82,7 +82,7 @@ class JwtValidatorTest {
     void shouldAllowAuthRequest() throws ServletException, IOException {
 
         when(request.getServletPath())
-                .thenReturn("/api/auth/login");
+                .thenReturn("/auth/login");
 
         jwtValidator.doFilterInternal(request, response, filterChain);
 
