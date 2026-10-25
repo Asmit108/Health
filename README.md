@@ -1,4 +1,4 @@
-# Social Networking Platform
+# Health Check Application
 
 A backend health check application built with Java and Spring Boot.
 
